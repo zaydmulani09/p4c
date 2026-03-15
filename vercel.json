@@ -1,0 +1,14 @@
+{
+  "buildCommand": "cd portal && npm ci && npm run build",
+  "outputDirectory": ".",
+  "rewrites": [
+    {
+      "source": "/portal/assets/:file*",
+      "destination": "/portal/dist/assets/:file*"
+    },
+    {
+      "source": "/portal/:path*",
+      "destination": "/portal/dist/index.html"
+    }
+  ]
+}
