@@ -1,13 +1,17 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import Guard                from '../components/Guard.jsx'
-import Landing              from './Landing.jsx'
-import Login                from './Login.jsx'
-import Apply                from './Apply.jsx'
-import AcceptInvite         from './AcceptInvite.jsx'
-import AdminDashboard       from './AdminDashboard.jsx'
-import ChapterDashboard     from './ChapterDashboard.jsx'
-import VolunteerDashboard   from './VolunteerDashboard.jsx'
-import NotFound             from './NotFound.jsx'
+import Guard               from '../components/Guard.jsx'
+import ChapterLayout       from '../components/ChapterLayout.jsx'
+import Landing             from './Landing.jsx'
+import Login               from './Login.jsx'
+import Apply               from './Apply.jsx'
+import AcceptInvite        from './AcceptInvite.jsx'
+import AdminDashboard      from './AdminDashboard.jsx'
+import VolunteerDashboard  from './VolunteerDashboard.jsx'
+import NotFound            from './NotFound.jsx'
+import Dashboard           from './chapter/Dashboard.jsx'
+import Tracker             from './chapter/Tracker.jsx'
+import Resources           from './chapter/Resources.jsx'
+import ComingSoon          from './chapter/ComingSoon.jsx'
 
 export const router = createBrowserRouter(
   [
@@ -32,9 +36,19 @@ export const router = createBrowserRouter(
       path: '/chapter',
       element: (
         <Guard allowedRoles={['chapter_lead']}>
-          <ChapterDashboard />
+          <ChapterLayout />
         </Guard>
       ),
+      children: [
+        { index: true,             element: <Dashboard /> },
+        { path: 'tracker',         element: <Tracker /> },
+        { path: 'resources',       element: <Resources /> },
+        { path: 'pipeline',        element: <ComingSoon title="Partnership Pipeline" /> },
+        { path: 'inventory',       element: <ComingSoon title="Book Inventory" /> },
+        { path: 'team',            element: <ComingSoon title="Team" /> },
+        { path: 'stats',           element: <ComingSoon title="Chapter Stats" /> },
+        { path: 'impact',          element: <ComingSoon title="Impact Reports" /> },
+      ],
     },
 
     // ── Protected: volunteer ───────────────────────────────

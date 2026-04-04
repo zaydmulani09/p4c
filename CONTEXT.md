@@ -32,6 +32,7 @@ p4c/
 ├── script.js                         # Static site scripts
 ├── vercel.json                       # Vercel build + SPA rewrites
 ├── schema.sql                        # Full Supabase schema (run in SQL editor)
+├── CONTEXT.md                        # This file
 ├── .gitignore
 │
 ├── scripts/
@@ -44,7 +45,7 @@ p4c/
 │   ├── vite.config.js
 │   ├── tailwind.config.js
 │   ├── postcss.config.js
-│   ├── .env.example                  # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+│   ├── .env.example                  # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_GROQ_API_KEY
 │   │
 │   └── src/
 │       ├── main.jsx                  # Entry: AuthProvider → RouterProvider
@@ -57,9 +58,17 @@ p4c/
 │       ├── context/
 │       │   └── AuthContext.jsx       # AuthProvider + useAuth hook
 │       │
+│       ├── hooks/
+│       │   ├── useChapter.js         # Fetch current chapter details
+│       │   ├── useWeeklyStats.js     # This-week counts (orgs, books, dists, active)
+│       │   └── useOrganizations.js   # Fetch/add/update orgs, filter + pagination
+│       │
 │       ├── components/
 │       │   ├── Guard.jsx             # Role-based route protection
-│       │   └── Navbar.jsx            # Auth-aware nav, role badge
+│       │   ├── Navbar.jsx            # Auth-aware nav, role badge
+│       │   ├── Modal.jsx             # Reusable centered modal wrapper
+│       │   ├── ChapterLayout.jsx     # Sidebar + top bar shell for chapter pages
+│       │   └── ChapterSidebar.jsx    # 240px nav sidebar, mobile overlay
 │       │
 │       └── pages/
 │           ├── router.jsx            # createBrowserRouter, all routes
@@ -69,8 +78,14 @@ p4c/
 │           ├── AcceptInvite.jsx      # Magic-link → set password flow
 │           ├── NotFound.jsx          # 404
 │           ├── AdminDashboard.jsx    # national_admin stub (P5)
-│           ├── ChapterDashboard.jsx  # chapter_lead stub (P3)
-│           └── VolunteerDashboard.jsx # volunteer stub (P4)
+│           ├── ChapterDashboard.jsx  # (superseded by chapter/ pages below)
+│           ├── VolunteerDashboard.jsx # volunteer stub (P4)
+│           │
+│           └── chapter/
+│               ├── Dashboard.jsx     # Chapter lead home — stats, overdue, AI summary, quick actions
+│               ├── Tracker.jsx       # Outreach tracker — inline editing, filters, pagination
+│               ├── Resources.jsx     # Resource library grouped by category
+│               └── ComingSoon.jsx    # Stub for unimplemented routes
 │
 └── (static site assets)
     ├── hero-bg.png
@@ -91,7 +106,7 @@ p4c/
 |--------|-------|--------|
 | P1 | Foundation + Schema + Public Pages | ✅ Complete |
 | P2 | Auth + Role Routing | ✅ Complete |
-| P3 | Chapter Dashboard + Outreach Tracker | ⏳ Next |
+| P3 | Chapter Dashboard + Outreach Tracker | ✅ Complete |
 | P4 | Book Inventory + Pipeline | 🔲 Pending |
 | P5 | National Admin Views | 🔲 Pending |
 | P6 | AI Features + Impact Reports | 🔲 Pending |
@@ -129,6 +144,20 @@ p4c/
 - Inline spinner on Login submit button
 - Session persistence across page refreshes via `onAuthStateChange`
 
+## What P3 Built
+
+- `ChapterLayout.jsx` + `ChapterSidebar.jsx` — 240px fixed sidebar with P4C logo, nav items with active state (orange left border), role badge, sign out. Mobile: full-screen overlay with hamburger. Top bar: sticky, shows page title + notification bell (UI only).
+- `pages/chapter/Dashboard.jsx` — Welcome header (Montserrat 900), chapter name (Josefin Slab), Founding Chapter ⭐ badge, 4 stat cards (navy bg, orange left border), overdue follow-ups panel (orgs not updated in 14+ days and status not closed), 3 quick-action modals (Add Organization, Log Books, Log Distribution), AI weekly summary panel (Groq llama3-70b-8192, 7-day localStorage cache per chapter per week)
+- `pages/chapter/Tracker.jsx` — horizontally scrollable table with 18 columns matching Google Sheet, inline cell editing (click → input/select → Enter/blur to save), slide-in add panel (right, 0.35s cubic-bezier), filters bar (search, status multi-select, org type, date range, clear all), overdue row highlighting (orange left border for past follow_up_date), status badge colors (green=established, teal=interested/meeting, red=closed), sort on column headers (asc/desc toggle), pagination (50 rows, pill controls), empty state
+- `pages/chapter/Resources.jsx` — resource list from DB grouped by category, download button per file, empty state
+- `pages/chapter/ComingSoon.jsx` — stub for Pipeline, Inventory, Team, Stats, Impact routes
+- `components/Modal.jsx` — reusable centered modal wrapper with backdrop blur
+- `hooks/useChapter.js` — fetch chapter details by chapterId
+- `hooks/useWeeklyStats.js` — 4 parallel count queries for weekly dashboard stats
+- `hooks/useOrganizations.js` — fetch/add/update orgs with filter params, pagination, logged_by name resolution via `public.users`
+- `router.jsx` — updated: `/chapter` now uses nested routes under `ChapterLayout` Guard wrapper
+- `.env.example` — added `VITE_GROQ_API_KEY=`
+
 ---
 
 ## Test Count
@@ -141,4 +170,6 @@ p4c/
 
 - `FOUNDING_CHAPTER_ID` in `portal/src/lib/config.js` is a placeholder — replace with real UUID after the South Brunswick chapter row is created in Supabase
 - No tests written yet
-- Groq API key not yet configured — AI features blocked until P6
+- `VITE_GROQ_API_KEY` must be set in Vercel env vars for AI summaries to work
+- Bundle is ~506KB gzipped to ~141KB — acceptable for now, can code-split in P8
+- `ChapterDashboard.jsx` is a dead file (superseded by `chapter/Dashboard.jsx`) — safe to delete later
