@@ -11,6 +11,8 @@ import NotFound            from './NotFound.jsx'
 import Dashboard           from './chapter/Dashboard.jsx'
 import Tracker             from './chapter/Tracker.jsx'
 import Resources           from './chapter/Resources.jsx'
+import Inventory           from './chapter/Inventory.jsx'
+import Pipeline            from './chapter/Pipeline.jsx'
 import ComingSoon          from './chapter/ComingSoon.jsx'
 
 export const router = createBrowserRouter(
@@ -43,8 +45,8 @@ export const router = createBrowserRouter(
         { index: true,             element: <Dashboard /> },
         { path: 'tracker',         element: <Tracker /> },
         { path: 'resources',       element: <Resources /> },
-        { path: 'pipeline',        element: <ComingSoon title="Partnership Pipeline" /> },
-        { path: 'inventory',       element: <ComingSoon title="Book Inventory" /> },
+        { path: 'pipeline',        element: <Pipeline /> },
+        { path: 'inventory',       element: <Inventory /> },
         { path: 'team',            element: <ComingSoon title="Team" /> },
         { path: 'stats',           element: <ComingSoon title="Chapter Stats" /> },
         { path: 'impact',          element: <ComingSoon title="Impact Reports" /> },

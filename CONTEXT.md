@@ -61,7 +61,9 @@ p4c/
 │       ├── hooks/
 │       │   ├── useChapter.js         # Fetch current chapter details
 │       │   ├── useWeeklyStats.js     # This-week counts (orgs, books, dists, active)
-│       │   └── useOrganizations.js   # Fetch/add/update orgs, filter + pagination
+│       │   ├── useOrganizations.js   # Fetch/add/update orgs, filter + pagination
+│       │   ├── useBooks.js           # Fetch/add/update books; logDistribution()
+│       │   └── useDistributions.js   # Fetch distribution history for chapter
 │       │
 │       ├── components/
 │       │   ├── Guard.jsx             # Role-based route protection
@@ -84,6 +86,8 @@ p4c/
 │           └── chapter/
 │               ├── Dashboard.jsx     # Chapter lead home — stats, overdue, AI summary, quick actions
 │               ├── Tracker.jsx       # Outreach tracker — inline editing, filters, pagination
+│               ├── Inventory.jsx     # Book inventory — table, log panel, distribution modal, totals bar
+│               ├── Pipeline.jsx      # Kanban pipeline — drag & drop, detail panel, collapsed columns
 │               ├── Resources.jsx     # Resource library grouped by category
 │               └── ComingSoon.jsx    # Stub for unimplemented routes
 │
@@ -107,7 +111,7 @@ p4c/
 | P1 | Foundation + Schema + Public Pages | ✅ Complete |
 | P2 | Auth + Role Routing | ✅ Complete |
 | P3 | Chapter Dashboard + Outreach Tracker | ✅ Complete |
-| P4 | Book Inventory + Pipeline | 🔲 Pending |
+| P4 | Book Inventory + Pipeline | ✅ Complete |
 | P5 | National Admin Views | 🔲 Pending |
 | P6 | AI Features + Impact Reports | 🔲 Pending |
 | P7 | Public Portal Landing + Chapter Map | 🔲 Pending |
@@ -159,6 +163,16 @@ p4c/
 - `.env.example` — added `VITE_GROQ_API_KEY=`
 
 ---
+
+## What P4 Built
+
+- `pages/chapter/Inventory.jsx` — book inventory table (8 columns, inline editing, sort, pagination 50/page), slide-in "+ Log Books" panel, filter bar (search/genre/age/condition), running totals bar (total + top-3 genres + Other), 90-day stale row highlight (orange left border), Log Distribution modal (org dropdown filtered to Partnership Established, multi-select books with qty, decrement on submit)
+- `pages/chapter/Pipeline.jsx` — kanban board with 10 status columns; drag-and-drop via @dnd-kit (card drop updates `current_status` in Supabase instantly); overdue indicator (orange dot, 14+ days non-closed); Partnership Established column has green header; Not Interested + Closed collapsed by default (click header to expand); detail side panel (slide-in, all fields editable inline); DragOverlay for smooth drag preview; horizontal scroll on overflow
+- `hooks/useBooks.js` — fetch/add/update books with filters + pagination; `logDistribution()` inserts distribution row and decrements book quantity, validates stock
+- `hooks/useDistributions.js` — fetch distribution history with org name join
+- `@dnd-kit/core` and `@dnd-kit/sortable` added to portal/package.json
+- `ChapterSidebar.jsx` — removed "Soon" stub badge from Pipeline and Inventory nav items
+- `router.jsx` — `/chapter/pipeline` → `<Pipeline />`, `/chapter/inventory` → `<Inventory />`
 
 ## Test Count
 
