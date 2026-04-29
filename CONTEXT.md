@@ -63,14 +63,20 @@ p4c/
 │       │   ├── useWeeklyStats.js     # This-week counts (orgs, books, dists, active)
 │       │   ├── useOrganizations.js   # Fetch/add/update orgs, filter + pagination
 │       │   ├── useBooks.js           # Fetch/add/update books; logDistribution()
-│       │   └── useDistributions.js   # Fetch distribution history for chapter
+│       │   ├── useDistributions.js   # Fetch distribution history for chapter
+│       │   ├── useNetworkStats.js    # get_public_stats() RPC + leaderboard + health + activity
+│       │   ├── useChapters.js        # All chapters with aggregate stats, suspend/reactivate
+│       │   ├── useApplications.js    # Fetch apps by status, approve/reject
+│       │   └── useResources.js       # Fetch, upload (Storage), delete, update resources
 │       │
 │       ├── components/
 │       │   ├── Guard.jsx             # Role-based route protection
 │       │   ├── Navbar.jsx            # Auth-aware nav, role badge
 │       │   ├── Modal.jsx             # Reusable centered modal wrapper
 │       │   ├── ChapterLayout.jsx     # Sidebar + top bar shell for chapter pages
-│       │   └── ChapterSidebar.jsx    # 240px nav sidebar, mobile overlay
+│       │   ├── ChapterSidebar.jsx    # 240px nav sidebar, mobile overlay
+│       │   ├── AdminLayout.jsx       # Admin sidebar + top bar shell
+│       │   └── AdminSidebar.jsx      # 240px admin nav with Co-ED badge
 │       │
 │       └── pages/
 │           ├── router.jsx            # createBrowserRouter, all routes
@@ -83,6 +89,11 @@ p4c/
 │           ├── ChapterDashboard.jsx  # (superseded by chapter/ pages below)
 │           ├── VolunteerDashboard.jsx # volunteer stub (P4)
 │           │
+│           ├── admin/
+│           │   ├── Dashboard.jsx     # Network stats, leaderboard, health feed, AI summary, activity
+│           │   ├── Chapters.jsx      # All chapters table, inline expand, suspend/reactivate
+│           │   ├── Applications.jsx  # Pending/approved/rejected tabs, approve/reject flow
+│           │   └── Resources.jsx     # Upload/delete/edit resources, Supabase Storage integration
 │           └── chapter/
 │               ├── Dashboard.jsx     # Chapter lead home — stats, overdue, AI summary, quick actions
 │               ├── Tracker.jsx       # Outreach tracker — inline editing, filters, pagination
@@ -112,7 +123,7 @@ p4c/
 | P2 | Auth + Role Routing | ✅ Complete |
 | P3 | Chapter Dashboard + Outreach Tracker | ✅ Complete |
 | P4 | Book Inventory + Pipeline | ✅ Complete |
-| P5 | National Admin Views | 🔲 Pending |
+| P5 | National Admin Views | ✅ Complete |
 | P6 | AI Features + Impact Reports | 🔲 Pending |
 | P7 | Public Portal Landing + Chapter Map | 🔲 Pending |
 | P8 | Polish + Data Migration + Launch | 🔲 Pending |
@@ -164,6 +175,19 @@ p4c/
 
 ---
 
+## What P5 Built
+
+- `components/AdminLayout.jsx` + `components/AdminSidebar.jsx` — mirror of ChapterLayout/Sidebar for national_admin. Sidebar lists 5 nav items (Impact Reports stub), Co-Executive Directors orange badge, Zayd Mulani + Affan Shaik names, Sign Out. HQ badge in top bar.
+- `pages/admin/Dashboard.jsx` — "Pages for Change Network" header (Montserrat 900), Josefin Slab co-eds line, Founding Chapter badge; 4 aggregate stat cards (navy, orange left border); AI weekly network summary (Groq, 7-day localStorage cache per week); chapter leaderboard table (ranked by books distributed, gold trophy for #1); chapter health feed (green/amber/red dots based on last activity days); recent activity feed (last 10 org/book events across all chapters)
+- `pages/admin/Chapters.jsx` — sortable/filterable table of all chapters; click row → inline expand showing 6 aggregate stats (orgs, books, dists, partnerships, lead, last activity); Suspend (with confirmation) and Reactivate actions; filter by status; search by name/school; empty state
+- `pages/admin/Applications.jsx` — 3-tab bar (Pending/Approved/Rejected); expandable application cards with full "why interested"; Approve flow creates chapter row in DB + updates application status (invite email stubbed — requires service role key, note shown in UI); Reject flow shows reason modal, stores reason
+- `pages/admin/Resources.jsx` — upload modal with drag-and-drop file zone, Supabase Storage bucket `resources`; grouped by category; per-resource inline edit (title/description) + delete (removes from Storage + table) + download; empty state
+- `hooks/useNetworkStats.js` — parallel queries: get_public_stats(), chapter rows, distributions, partnerships, user names, last-activity per chapter, recent activity feed
+- `hooks/useChapters.js` — all chapters enriched with aggregate stats via parallel Supabase queries; suspend/reactivate mutations
+- `hooks/useApplications.js` — fetch by status tab; approve (chapter insert + status update); reject (status update with reason)
+- `hooks/useResources.js` — fetch, upload to Storage, delete (Storage + DB row), update
+- `router.jsx` — `/admin` now uses nested routes under `AdminLayout` Guard; old flat `AdminDashboard` import removed; Impact Reports stub kept
+
 ## What P4 Built
 
 - `pages/chapter/Inventory.jsx` — book inventory table (8 columns, inline editing, sort, pagination 50/page), slide-in "+ Log Books" panel, filter bar (search/genre/age/condition), running totals bar (total + top-3 genres + Other), 90-day stale row highlight (orange left border), Log Distribution modal (org dropdown filtered to Partnership Established, multi-select books with qty, decrement on submit)
@@ -185,5 +209,7 @@ p4c/
 - `FOUNDING_CHAPTER_ID` in `portal/src/lib/config.js` is a placeholder — replace with real UUID after the South Brunswick chapter row is created in Supabase
 - No tests written yet
 - `VITE_GROQ_API_KEY` must be set in Vercel env vars for AI summaries to work
-- Bundle is ~506KB gzipped to ~141KB — acceptable for now, can code-split in P8
+- Bundle is ~627KB / ~169KB gzipped — can code-split in P8
 - `ChapterDashboard.jsx` is a dead file (superseded by `chapter/Dashboard.jsx`) — safe to delete later
+- `AdminDashboard.jsx` (pages root) is a dead file — superseded by `admin/Dashboard.jsx` — safe to delete later
+- **Invite email limitation**: `supabase.auth.admin.inviteUserByEmail()` requires the service role key, which must never be exposed in the frontend. On application approval, the chapter DB row is created but the auth invite must be sent manually via the Supabase dashboard (Auth → Users → Invite) or via a backend Edge Function. This is a P6/P8 concern.
