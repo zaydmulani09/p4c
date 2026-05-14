@@ -50,10 +50,12 @@ p4c/
 │   └── src/
 │       ├── main.jsx                  # Entry: AuthProvider → RouterProvider
 │       ├── index.css                 # Design tokens, component classes
+│       ├── print.css                 # @media print styles — imported by Impact + Certificates pages
 │       │
 │       ├── lib/
 │       │   ├── supabase.js           # Supabase client singleton
-│       │   └── config.js             # FOUNDING_CHAPTER_ID constant
+│       │   ├── config.js             # FOUNDING_CHAPTER_ID constant
+│       │   └── groq.js               # Groq service — generateWeeklySummary, generateImpactReport, generateImpactCertificate
 │       │
 │       ├── context/
 │       │   └── AuthContext.jsx       # AuthProvider + useAuth hook
@@ -93,13 +95,16 @@ p4c/
 │           │   ├── Dashboard.jsx     # Network stats, leaderboard, health feed, AI summary, activity
 │           │   ├── Chapters.jsx      # All chapters table, inline expand, suspend/reactivate
 │           │   ├── Applications.jsx  # Pending/approved/rejected tabs, approve/reject flow
-│           │   └── Resources.jsx     # Upload/delete/edit resources, Supabase Storage integration
+│           │   ├── Resources.jsx     # Upload/delete/edit resources, Supabase Storage integration
+│           │   ├── Impact.jsx        # National impact report — network aggregation, Groq, PDF/copy
+│           │   └── Certificates.jsx  # Chapter lead certificate generator — Groq, PDF print
 │           └── chapter/
 │               ├── Dashboard.jsx     # Chapter lead home — stats, overdue, AI summary, quick actions
 │               ├── Tracker.jsx       # Outreach tracker — inline editing, filters, pagination
 │               ├── Inventory.jsx     # Book inventory — table, log panel, distribution modal, totals bar
 │               ├── Pipeline.jsx      # Kanban pipeline — drag & drop, detail panel, collapsed columns
 │               ├── Resources.jsx     # Resource library grouped by category
+│               ├── Impact.jsx        # Chapter impact report — period selector, Groq generation, PDF/copy
 │               └── ComingSoon.jsx    # Stub for unimplemented routes
 │
 └── (static site assets)
@@ -124,7 +129,7 @@ p4c/
 | P3 | Chapter Dashboard + Outreach Tracker | ✅ Complete |
 | P4 | Book Inventory + Pipeline | ✅ Complete |
 | P5 | National Admin Views | ✅ Complete |
-| P6 | AI Features + Impact Reports | 🔲 Pending |
+| P6 | AI Features + Impact Reports | ✅ Complete |
 | P7 | Public Portal Landing + Chapter Map | 🔲 Pending |
 | P8 | Polish + Data Migration + Launch | 🔲 Pending |
 
@@ -187,6 +192,17 @@ p4c/
 - `hooks/useApplications.js` — fetch by status tab; approve (chapter insert + status update); reject (status update with reason)
 - `hooks/useResources.js` — fetch, upload to Storage, delete (Storage + DB row), update
 - `router.jsx` — `/admin` now uses nested routes under `AdminLayout` Guard; old flat `AdminDashboard` import removed; Impact Reports stub kept
+
+## What P6 Built
+
+- `portal/src/lib/groq.js` — centralized Groq service (`llama3-70b-8192`): `generateWeeklySummary(stats, scope)`, `generateImpactReport(data, period, scope)`, `generateImpactCertificate(data)`. All functions handle errors gracefully → fallback string. 24-hour localStorage cache per report type + key.
+- `portal/src/pages/chapter/Impact.jsx` — chapter impact report page: 5-period selector (This Month / Last Month / This Semester / This Year / Custom Range), data preview with 5 stat cards + status breakdown + top volunteer, Groq report generation with screen preview, Download PDF (`window.print()`), Copy Text. Empty state if no data.
+- `portal/src/pages/admin/Impact.jsx` — national network impact report: same UX pattern, aggregates orgs/books/distributions/partnerships across all chapters, shows top chapter + geographic spread (states list).
+- `portal/src/pages/admin/Certificates.jsx` — admin-only certificate generator: chapter lead dropdown (all `chapter_lead` users), year selector (current + 2 prior), fetches full-year chapter stats, Groq generates certificate body, screen preview with signature lines, PDF download. Navy-border certificate layout in print CSS.
+- `portal/src/print.css` — `@media print` styles: hides aside/nav/buttons/.no-print, white background, navy text, `report-header`/`report-body`/`certificate-border`/`certificate-sigs` classes, fixed `.print-footer` ("Pages for Change — pagesforchange.org") appears on every printed page. Imported only in Impact + Certificates pages.
+- `router.jsx` — `/chapter/impact` → `ChapterImpact`, `/admin/impact` → `AdminImpact`, `/admin/certificates` → `Certificates`. `ComingSoon` stubs replaced.
+- `AdminSidebar.jsx` — Impact Reports stub removed; Certificates nav item added.
+- `ChapterSidebar.jsx` — Impact Reports stub removed.
 
 ## What P4 Built
 

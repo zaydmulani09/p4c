@@ -2,11 +2,12 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
 const NAV_ITEMS = [
-  { to: '/admin',              label: 'National Dashboard', end: true,  stub: false },
-  { to: '/admin/chapters',     label: 'Chapter Management', end: false, stub: false },
-  { to: '/admin/applications', label: 'Applications',       end: false, stub: false },
-  { to: '/admin/resources',    label: 'Resource Library',   end: false, stub: false },
-  { to: '/admin/impact',       label: 'Impact Reports',     end: false, stub: true  },
+  { to: '/admin',                 label: 'National Dashboard', end: true,  stub: false },
+  { to: '/admin/chapters',        label: 'Chapter Management', end: false, stub: false },
+  { to: '/admin/applications',    label: 'Applications',       end: false, stub: false },
+  { to: '/admin/resources',       label: 'Resource Library',   end: false, stub: false },
+  { to: '/admin/impact',          label: 'Impact Reports',     end: false, stub: false },
+  { to: '/admin/certificates',    label: 'Certificates',       end: false, stub: false },
 ]
 
 export default function AdminSidebar({ open, onClose }) {

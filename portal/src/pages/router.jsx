@@ -18,6 +18,9 @@ import AdminDashboard      from './admin/Dashboard.jsx'
 import AdminChapters       from './admin/Chapters.jsx'
 import AdminApplications   from './admin/Applications.jsx'
 import AdminResources      from './admin/Resources.jsx'
+import AdminImpact         from './admin/Impact.jsx'
+import Certificates        from './admin/Certificates.jsx'
+import ChapterImpact       from './chapter/Impact.jsx'
 
 export const router = createBrowserRouter(
   [
@@ -40,7 +43,8 @@ export const router = createBrowserRouter(
         { path: 'chapters',         element: <AdminChapters /> },
         { path: 'applications',     element: <AdminApplications /> },
         { path: 'resources',        element: <AdminResources /> },
-        { path: 'impact',           element: <ComingSoon title="Impact Reports" /> },
+        { path: 'impact',           element: <AdminImpact /> },
+        { path: 'certificates',     element: <Certificates /> },
       ],
     },
 
@@ -60,7 +64,7 @@ export const router = createBrowserRouter(
         { path: 'inventory',       element: <Inventory /> },
         { path: 'team',            element: <ComingSoon title="Team" /> },
         { path: 'stats',           element: <ComingSoon title="Chapter Stats" /> },
-        { path: 'impact',          element: <ComingSoon title="Impact Reports" /> },
+        { path: 'impact',          element: <ChapterImpact /> },
       ],
     },
 

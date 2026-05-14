@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { to: '/chapter/inventory', label: 'Book Inventory',       end: false, stub: false },
   { to: '/chapter/team',      label: 'Team',                 end: false, stub: true  },
   { to: '/chapter/stats',     label: 'Stats',                end: false, stub: true  },
-  { to: '/chapter/impact',    label: 'Impact Reports',       end: false, stub: true  },
+  { to: '/chapter/impact',    label: 'Impact Reports',       end: false, stub: false },
   { to: '/chapter/resources', label: 'Resources',            end: false, stub: false },
 ]
 
