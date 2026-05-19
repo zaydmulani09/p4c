@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pages for Change - Empowering Through Reading</title>
+    <link rel="icon" type="image/png" href="download.png">
+    <meta name="description" content="Providing books to those in need. Join our charity to make a difference.">
+    <link rel="stylesheet" href="style.css?v=35">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">P4C</div>
+        <button id="menu-toggle" class="menu-button" aria-label="Open Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="12" x2="20" y2="12"></line>
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="4" y1="18" x2="20" y2="18"></line>
+            </svg>
+        </button>
+    </header>
+
+    <div id="nav-overlay" class="nav-overlay">
+        <button id="menu-close" class="menu-button close-button" aria-label="Close Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <nav class="overlay-menu">
+            <ul>
+                <li><a href="#home">HOME <span class="leaf-icon">📖</span></a></li>
+                <li><a href="#donate">DONATE BOOKS</a></li>
+                <li><a href="#about">ABOUT US</a></li>
+                <li><a href="#mission-vision-values">PHILOSOPHY</a></li>
+                <li><a href="#team">OUR TEAM</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="hero-bg-container">
+                <img src="Firefly - Copy.png" alt="Hero background" class="hero-bg">
+            </div>
+            
+            <div class="hero-content">
+                <div class="hashtag-badge"># P A G E S   F O R   C H A N G E .</div>
+                <h1>JOIN THE MOVEMENT!</h1>
+                <p>Turning Pages Into Opportunities. Share a book with us and track our progress!</p>
+                <div class="pill-group">
+                    <button class="pill-button primary">Placeholder 1</button>
+                    <button class="pill-button secondary">Placeholder 2</button>
+                </div>
+                <div class="counter" id="books-counter">150<span class="counter-label">Pages</span></div>
+            </div>
+        </section>
+
+        <section class="content-section alternate" id="donate">
+            <div class="donation-card-wrapper">
+                <div class="donation-card">
+                    <h3>JOIN #P4C!</h3>
+                    <p class="subtitle">1 book changes a life</p>
+                    <div class="donation-grid">
+                        <button class="don-btn">5 books</button>
+                        <button class="don-btn active">20 books</button>
+                        <button class="don-btn">50 books</button>
+                        <button class="don-btn">100 books</button>
+                    </div>
+                    <input type="text" class="don-input" placeholder="Other amount">
+                    <button class="don-submit">Next</button>
+                </div>
+            </div>
+            <div class="container">
+                <div class="hashtag-badge">D O N A T E</div>
+                <h2>Donate Books</h2>
+                <p>We believe every book deserves a reader. You can drop off your book donations in person at <strong>5 Luna Ct, Kendall Park, NJ</strong>.</p>
+                <div class="map-container">
+                    <a href="https://www.google.com/maps/place/5+Luna+Ct,+Kendall+Park,+NJ" target="_blank" rel="noopener noreferrer" class="map-link">
+                        <iframe 
+                            src="https://maps.google.com/maps?q=5+Luna+ct+kendall+park+new+jersey&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                            width="100%" 
+                            height="100%" 
+                            frameborder="0" 
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            aria-hidden="false" 
+                            tabindex="-1">
+                        </iframe>
+                        <div class="map-overlay">
+                            <span class="overlay-text">Open in Google Maps</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section" id="about">
+            <div class="container">
+                <div class="about-collage-container">
+                    <!-- Background Elements -->
+                    <div class="about-circle"></div>
+                    <div class="about-dots"></div>
+                    <div class="about-rect-1"></div>
+                    <div class="about-rect-2"></div>
+
+                    <div class="about-text-content">
+                        <div class="hashtag-badge">O U R   S T O R Y</div>
+                        <h2>About Pages for Change</h2>
+                        <p>Pages for Change (P4C) is a non-profit organization dedicated to breaking the cycle of poverty through literacy. We believe that access to books is a fundamental right, not a privilege.</p>
+                        <p>Our journey began with a simple observation: millions of books gather dust on shelves while millions of children have nothing to read. We bridge this gap by collecting, refurbishing, and distributing books to underfunded schools and community centers.</p>
+                        
+                        <div class="about-stats-floating">
+                            <div class="stat-pill">
+                                <span class="stat-num">50k+</span>
+                                <span class="stat-label">Books Donated</span>
+                            </div>
+                            <div class="stat-pill">
+                                <span class="stat-num">120+</span>
+                                <span class="stat-label">Schools Reached</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="about-illustration-wrapper">
+                        <div class="illustration-bg-shape"></div>
+                        <img src="about_illustration_1777952315437.png" alt="About P4C Illustration">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section" id="mission-vision-values">
+            <div class="container">
+                <div class="hashtag-badge">P H I L O S O P H Y</div>
+                <h2 class="section-title">Mission | Vision | Values</h2>
+                <p class="section-subtitle">Click on a book to explore our core principles.</p>
+                
+                <div class="bookshelf-container">
+                    <button class="close-book-btn">
+                        <i class="fa-solid fa-xmark"></i> Close Book
+                    </button>
+                    <div class="shelf-rectangle"></div>
+                    <div class="shelf-light"></div>
+                    
+                    <div class="books-wrapper">
+                        <!-- Mission Book -->
+                        <div class="book-container mission">
+                            <div class="book">
+                                <div class="book-spine">MISSION</div>
+                                <div class="book-front">
+                                    <div class="cover-content">
+                                        <span class="cover-title">MISSION</span>
+                                        <span class="cover-decor">❧</span>
+                                    </div>
+                                </div>
+                                <div class="book-pages">
+                                    <div class="single-page">
+                                        <h3>Our Mission</h3>
+                                        <p>To empower communities by providing accessible literature and fostering a lifelong love for reading through dedicated outreach and charitable support.</p>
+                                        <div class="page-divider">❦</div>
+                                        <p>We believe that every book has the potential to spark a revolution in a young mind. Our mission is to ensure those sparks fly everywhere.</p>
+                                    </div>
+                                </div>
+                                <div class="book-back"></div>
+                            </div>
+                        </div>
+
+                        <!-- Vision Book -->
+                        <div class="book-container vision">
+                            <div class="book">
+                                <div class="book-spine">VISION</div>
+                                <div class="book-front">
+                                    <div class="cover-content">
+                                        <span class="cover-title">VISION</span>
+                                        <span class="cover-decor">✦</span>
+                                    </div>
+                                </div>
+                                <div class="book-pages">
+                                    <div class="single-page">
+                                        <h3>Our Vision</h3>
+                                        <p>A world where every individual has the opportunity to learn, grow, and succeed through the power of books, regardless of their circumstances.</p>
+                                        <div class="page-divider">✧</div>
+                                        <p>Imagine a future where libraries are as common as streetlights, and literacy is a fundamental right for all. That is the world we are building.</p>
+                                    </div>
+                                </div>
+                                <div class="book-back"></div>
+                            </div>
+                        </div>
+
+                        <!-- Values Book -->
+                        <div class="book-container values">
+                            <div class="book">
+                                <div class="book-spine">VALUES</div>
+                                <div class="book-front">
+                                    <div class="cover-content">
+                                        <span class="cover-title">VALUES</span>
+                                        <span class="cover-decor">❈</span>
+                                    </div>
+                                </div>
+                                <div class="book-pages">
+                                    <div class="single-page">
+                                        <h3>Core Values</h3>
+                                        <p>Integrity is at our core, ensuring honesty in every page we provide. We champion Accessibility because we believe in books for everyone. Our commitment to Education drives our goal of lifelong learning.</p>
+                                        <div class="page-divider">❊</div>
+                                        <p>We build Community with the belief that together we read, while focusing heavily on Sustainability to protect our future.</p>
+                                    </div>
+                                </div>
+                                <div class="book-back"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section" id="team">
+            <div class="container">
+                <div class="hashtag-badge">O U R   T E A M</div>
+                <h2 class="section-title">People Behind the Page</h2>
+                <p class="section-subtitle">The dedicated individuals behind the movement.</p>
+                
+                <div class="team-collage-container">
+                    <!-- Background Elements -->
+                    <div class="collage-circle"></div>
+                    <div class="collage-dots"></div>
+                    
+
+                    <!-- Leadership Member 1 -->
+                    <div class="collage-member member-1">
+                        <div class="collage-bg-shape"></div>
+                        <div class="photo-wrapper">
+                            <img src="IMG_2628-jukebox-bg-removed.png" alt="Anay Krishna">
+                        </div>
+                        <div class="member-info-box">
+                            <h3>Anay Krishna</h3>
+                            <p>Founder & Executive Director</p>
+                        </div>
+                        <div class="member-socials">
+                            <a href="https://www.linkedin.com/in/anay-krishna-b39183359/" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                            <a href="mailto:iamanaykrishna@gmail.com" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Leadership Member 2 -->
+                    <div class="collage-member member-2">
+                        <div class="collage-bg-shape"></div>
+                        <div class="photo-wrapper">
+                            <img src="https://media.istockphoto.com/id/1451587807/vector/user-profile-icon-vector-avatar-or-person-icon-profile-picture-portrait-symbol-vector.jpg?s=612x612&w=0&k=20&c=yDJ4ITX1cHMh25Lt1vI1zBn2cAKKAlByHBvPJ8gEiIg=" alt="Affan Shaik">
+                        </div>
+                        <div class="member-info-box">
+                            <h3>Affan Shaik</h3>
+                            <p>Team Member</p>
+                        </div>
+                        <div class="member-socials">
+                            <a href="https://www.linkedin.com/in/affan-shaik-a55307350/" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                            <a href="mailto:affanshaik2009@gmail.com" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Leadership Member 3 (Using one of the other team member images for variety) -->
+                    <div class="collage-member member-3">
+                        <div class="collage-bg-shape"></div>
+                        <div class="photo-wrapper">
+                            <img src="IMG_6712-jukebox-bg-removed.png" alt="Zayd Mulani">
+                        </div>
+                        <div class="member-info-box">
+                            <h3>Zayd Mulani</h3>
+                            <p>Team Member</p>
+                        </div>
+                        <div class="member-socials">
+                            <a href="https://www.linkedin.com/in/zayd-mulani-4a72a139b/?skipRedirect=true" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                            <a href="mailto:zaydmulani@gmail.com" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-image-container">
+            <img src="footerimage.png" alt="Footer Landscape" class="footer-img">
+            <div class="footer-overlay">
+                <h2>#PAGESFORCHANGE SOCIAL</h2>
+                <div class="social-icons">
+                    <a href="#" aria-label="LinkedIn" class="social-icon"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="#" aria-label="Instagram" class="social-icon"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" aria-label="X" class="social-icon"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" aria-label="Facebook" class="social-icon"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" aria-label="TikTok" class="social-icon"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="#" aria-label="YouTube" class="social-icon"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom-bar">
+            <a href="#">FAQ</a>
+            <a href="#">Contact Us</a>
+            <a href="#">Press Inquiries</a>
+            <a href="#">#PagesForChange</a>
+        </div>
+    </footer>
+
+
+    <script src="script.js?v=34"></script>
+</body>
+</html>
