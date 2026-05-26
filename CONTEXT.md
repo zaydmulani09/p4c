@@ -73,6 +73,7 @@ p4c/
 │       │
 │       ├── components/
 │       │   ├── Guard.jsx             # Role-based route protection
+│       │   ├── ChapterMap.jsx        # react-simple-maps US map, founding pin, hover tooltip, mobile list
 │       │   ├── Navbar.jsx            # Auth-aware nav, role badge
 │       │   ├── Modal.jsx             # Reusable centered modal wrapper
 │       │   ├── ChapterLayout.jsx     # Sidebar + top bar shell for chapter pages
@@ -91,6 +92,8 @@ p4c/
 │           ├── ChapterDashboard.jsx  # (superseded by chapter/ pages below)
 │           ├── VolunteerDashboard.jsx # volunteer stub (P4)
 │           │
+│           ├── Landing.jsx           # Public portal home — hero, map, why join, CTA, footer (P7)
+│           ├── Apply.jsx             # Chapter application — navy bg, field validation, char counter (P7)
 │           ├── admin/
 │           │   ├── Dashboard.jsx     # Network stats, leaderboard, health feed, AI summary, activity
 │           │   ├── Chapters.jsx      # All chapters table, inline expand, suspend/reactivate
@@ -130,7 +133,7 @@ p4c/
 | P4 | Book Inventory + Pipeline | ✅ Complete |
 | P5 | National Admin Views | ✅ Complete |
 | P6 | AI Features + Impact Reports | ✅ Complete |
-| P7 | Public Portal Landing + Chapter Map | 🔲 Pending |
+| P7 | Public Portal Landing + Chapter Map | ✅ Complete |
 | P8 | Polish + Data Migration + Launch | 🔲 Pending |
 
 ---
@@ -192,6 +195,14 @@ p4c/
 - `hooks/useApplications.js` — fetch by status tab; approve (chapter insert + status update); reject (status update with reason)
 - `hooks/useResources.js` — fetch, upload to Storage, delete (Storage + DB row), update
 - `router.jsx` — `/admin` now uses nested routes under `AdminLayout` Guard; old flat `AdminDashboard` import removed; Impact Reports stub kept
+
+## What P7 Built
+
+- `portal/src/pages/Landing.jsx` — complete redesign: hero with `hero-bg.png` + animated stat counters (`useCountUp` hook, ease-out cubic), How It Works (3 step cards), Chapter Map section with `ChapterMap` component + chapter cards grid (Founding Chapter ⭐ badge), Why Join (4 benefit cards), Apply CTA, full footer (nav links + social icons + co-EDs line + copyright).
+- `portal/src/components/ChapterMap.jsx` — `react-simple-maps` US map (`geoAlbersUsa` projection, `us-atlas@3` geo URL): navy state fills, founding chapter gold pulsing pin (CSS animation), regular chapter orange pins, hover tooltip (white card: name/school/city/state/books distributed), state-centroid coordinate lookup for all 51 states/DC, South Brunswick NJ hardcoded precise coords, mobile fallback list view.
+- `portal/src/pages/Apply.jsx` — polished rewrite: navy background, "JOIN THE NETWORK" badge, client-side field validation with field-level errors (`validate()` fn), character counter on textarea (green at 100+, orange 50–99, dim below), updated success state ("48 hours" copy), navy form card replacing cream bg.
+- `index.html` — Portal link added to main site footer quick links (already in nav overlay from P1).
+- `react-simple-maps@3.0.0` installed in `portal/package.json`.
 
 ## What P6 Built
 
