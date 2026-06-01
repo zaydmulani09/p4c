@@ -57,5 +57,62 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Horizontal Scroll for Team Section (Desktop only)
+    const teamScrollContainer = document.getElementById('team-scroll-container');
+    const teamHorizontalTrack = document.querySelector('.team-horizontal-track');
+    const stickyOffset = -180; // negative offset to let the title scroll off-screen before horizontal translation starts
+    
+    if (teamScrollContainer && teamHorizontalTrack) {
+        const setContainerHeight = () => {
+            if (window.innerWidth <= 992) {
+                teamScrollContainer.style.height = '';
+                return;
+            }
+            const trackWidth = teamHorizontalTrack.scrollWidth;
+            const maxTranslate = trackWidth - window.innerWidth;
+            if (maxTranslate > 0) {
+                teamScrollContainer.style.height = `${maxTranslate + window.innerHeight - stickyOffset}px`;
+            } else {
+                teamScrollContainer.style.height = '';
+            }
+        };
+        
+        const handleScroll = () => {
+            if (window.innerWidth <= 992) {
+                teamHorizontalTrack.style.transform = '';
+                return;
+            }
+            
+            const trackWidth = teamHorizontalTrack.scrollWidth;
+            const maxTranslate = trackWidth - window.innerWidth;
+            if (maxTranslate <= 0) return;
+            
+            const rect = teamScrollContainer.getBoundingClientRect();
+            const scrollProgress = stickyOffset - rect.top;
+            const maxProgress = teamScrollContainer.offsetHeight - window.innerHeight + stickyOffset;
+            
+            if (scrollProgress >= 0 && scrollProgress <= maxProgress) {
+                teamHorizontalTrack.style.transform = `translateX(-${scrollProgress}px)`;
+            } else if (scrollProgress < 0) {
+                teamHorizontalTrack.style.transform = 'translateX(0px)';
+            } else if (scrollProgress > maxProgress) {
+                teamHorizontalTrack.style.transform = `translateX(-${maxTranslate}px)`;
+            }
+        };
+        
+        window.addEventListener('load', () => {
+            setContainerHeight();
+            handleScroll();
+        });
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('resize', () => {
+            setContainerHeight();
+            handleScroll();
+        });
+        
+        // Initial setup
+        setContainerHeight();
+        handleScroll();
+    }
 });
 

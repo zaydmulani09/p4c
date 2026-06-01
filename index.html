@@ -6,7 +6,7 @@
     <title>Pages for Change - Empowering Through Reading</title>
     <link rel="icon" type="image/png" href="download.png">
     <meta name="description" content="Providing books to those in need. Join our charity to make a difference.">
-    <link rel="stylesheet" href="style.css?v=35">
+    <link rel="stylesheet" href="style.css?v=50">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +34,7 @@
         <nav class="overlay-menu">
             <ul>
                 <li><a href="#home">HOME <span class="leaf-icon">📖</span></a></li>
-                <li><a href="#donate">DONATE BOOKS</a></li>
+                <li><a href="#donation-card">DONATE BOOKS</a></li>
                 <li><a href="#about">ABOUT US</a></li>
                 <li><a href="#mission-vision-values">PHILOSOPHY</a></li>
                 <li><a href="#team">OUR TEAM</a></li>
@@ -53,8 +53,8 @@
                 <h1>JOIN THE MOVEMENT!</h1>
                 <p>Turning Pages Into Opportunities. Share a book with us and track our progress!</p>
                 <div class="pill-group">
-                    <button class="pill-button primary">Placeholder 1</button>
-                    <button class="pill-button secondary">Placeholder 2</button>
+                    <a href="#donation-card" class="pill-button primary">Donate Now</a>
+                    <a href="#team" class="pill-button secondary">The Team</a>
                 </div>
                 <div class="counter" id="books-counter">150<span class="counter-label">Pages</span></div>
             </div>
@@ -62,7 +62,7 @@
 
         <section class="content-section alternate" id="donate">
             <div class="donation-card-wrapper">
-                <div class="donation-card">
+                <div class="donation-card" id="donation-card">
                     <h3>JOIN #P4C!</h3>
                     <p class="subtitle">1 book changes a life</p>
                     <div class="donation-grid">
@@ -218,68 +218,158 @@
             </div>
         </section>
 
-        <section class="content-section" id="team">
-            <div class="container">
-                <div class="hashtag-badge">O U R   T E A M</div>
-                <h2 class="section-title">People Behind the Page</h2>
-                <p class="section-subtitle">The dedicated individuals behind the movement.</p>
-                
-                <div class="team-collage-container">
-                    <!-- Background Elements -->
-                    <div class="collage-circle"></div>
-                    <div class="collage-dots"></div>
+        <section id="team-scroll-container" class="team-scroll-container">
+            <section class="content-section team-sticky-wrapper" id="team">
+                <!-- Background Elements (static) -->
+                <div class="collage-circle"></div>
+                <div class="collage-dots"></div>
+
+                <div class="container team-container">
+                    <div class="hashtag-badge">O U R   T E A M</div>
+                    <h2 class="section-title">People Behind the Page</h2>
+                    <p class="section-subtitle" >The dedicated individuals behind the movement.</p>
                     
+                    <div class="team-horizontal-track">
+                        <!-- Original Collage -->
+                        <div class="team-collage-container">
+                            
+                            <!-- Leadership Member 1 -->
+                            <div class="collage-member member-1">
+                                <div class="collage-bg-shape"></div>
+                                <div class="photo-wrapper">
+                                    <img src="IMG_2628-jukebox-bg-removed.png" alt="Anay Krishna">
+                                </div>
+                                <div class="member-info-box">
+                                    <h3>Anay Krishna</h3>
+                                    <p>Internet Tech & Consulting</p>
+                                </div>
+                                <div class="member-socials">
+                                    <a href="https://www.linkedin.com/in/anay-krishna-b39183359/" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                                    <a href="mailto:iamanaykrishna@gmail.com" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                                </div>
+                            </div>
 
-                    <!-- Leadership Member 1 -->
-                    <div class="collage-member member-1">
-                        <div class="collage-bg-shape"></div>
-                        <div class="photo-wrapper">
-                            <img src="IMG_2628-jukebox-bg-removed.png" alt="Anay Krishna">
-                        </div>
-                        <div class="member-info-box">
-                            <h3>Anay Krishna</h3>
-                            <p>Founder & Executive Director</p>
-                        </div>
-                        <div class="member-socials">
-                            <a href="https://www.linkedin.com/in/anay-krishna-b39183359/" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
-                            <a href="mailto:iamanaykrishna@gmail.com" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
-                        </div>
-                    </div>
+                            <!-- Leadership Member 2 -->
+                            <div class="collage-member member-2">
+                                <div class="collage-bg-shape"></div>
+                                <div class="photo-wrapper">
+                                    <img src="affan_s.png" alt="Affan Shaik">
+                                </div>
+                                <div class="member-info-box">
+                                    <h3>Affan Shaik</h3>
+                                    <p>Founder</p>
+                                </div>
+                                <div class="member-socials">
+                                    <a href="https://www.linkedin.com/in/affan-shaik-a55307350/" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                                    <a href="mailto:affanshaik2009@gmail.com" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                                </div>
+                            </div>
 
-                    <!-- Leadership Member 2 -->
-                    <div class="collage-member member-2">
-                        <div class="collage-bg-shape"></div>
-                        <div class="photo-wrapper">
-                            <img src="https://media.istockphoto.com/id/1451587807/vector/user-profile-icon-vector-avatar-or-person-icon-profile-picture-portrait-symbol-vector.jpg?s=612x612&w=0&k=20&c=yDJ4ITX1cHMh25Lt1vI1zBn2cAKKAlByHBvPJ8gEiIg=" alt="Affan Shaik">
+                            <!-- Leadership Member 3 (Using one of the other team member images for variety) -->
+                            <div class="collage-member member-3">
+                                <div class="collage-bg-shape"></div>
+                                <div class="photo-wrapper">
+                                    <img src="IMG_6712-jukebox-bg-removed.png" alt="Zayd Mulani">
+                                </div>
+                                <div class="member-info-box">
+                                    <h3>Zayd Mulani</h3>
+                                    <p>Founder</p>
+                                </div>
+                                <div class="member-socials">
+                                    <a href="https://www.linkedin.com/in/zayd-mulani-4a72a139b/?skipRedirect=true" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                                    <a href="mailto:zaydmulani@gmail.com" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                                </div>
+                            </div>
                         </div>
-                        <div class="member-info-box">
-                            <h3>Affan Shaik</h3>
-                            <p>Team Member</p>
-                        </div>
-                        <div class="member-socials">
-                            <a href="https://www.linkedin.com/in/affan-shaik-a55307350/" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
-                            <a href="mailto:affanshaik2009@gmail.com" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
-                        </div>
-                    </div>
 
-                    <!-- Leadership Member 3 (Using one of the other team member images for variety) -->
-                    <div class="collage-member member-3">
-                        <div class="collage-bg-shape"></div>
-                        <div class="photo-wrapper">
-                            <img src="IMG_6712-jukebox-bg-removed.png" alt="Zayd Mulani">
+                        <!-- Collage Group 2 (3 members) -->
+                        <div class="team-collage-container group-2">
+                            <!-- Member 4 -->
+                            <div class="collage-member member-1">
+                                <div class="collage-bg-shape"></div>
+                                <div class="photo-wrapper">
+                                    <img src="sharf_s.png" alt="Sharf Syed">
+                                </div>
+                                <div class="member-info-box">
+                                    <h3>Sharf Syed</h3>
+                                    <p>Marketing & Social Media</p>
+                                </div>
+                                <div class="member-socials">
+                                    <a href="https://www.linkedin.com" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                                    <a href="mailto:" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                                </div>
+                            </div>
+
+                            <!-- Member 5 -->
+                            <div class="collage-member member-2">
+                                <div class="collage-bg-shape"></div>
+                                <div class="photo-wrapper">
+                                    <img src="affan_a (2).png" alt="Affan Anwari">
+                                </div>
+                                <div class="member-info-box">
+                                    <h3>Affan Anwari</h3>
+                                    <p>Outreach & Partnerships</p>
+                                </div>
+                                <div class="member-socials">
+                                    <a href="https://www.linkedin.com/in/affan-anwari-0128673a7/" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                                    <a href="mailto:affanaanwari@gmail.com" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                                </div>
+                            </div>
+
+                            <!-- Member 6 -->
+                            <div class="collage-member member-3">
+                                <div class="collage-bg-shape"></div>
+                                <div class="photo-wrapper">
+                                    <img src="zaid_a.png" alt="Zaid Ali">
+                                </div>
+                                <div class="member-info-box">
+                                    <h3>Zaid Ali</h3>
+                                    <p>Outreach & Partnerships</p>
+                                </div>
+                                <div class="member-socials">
+                                    <a href="https://www.linkedin.com/in/zaid-ali1/" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                                    <a href="mailto:zaidali122008@gmail.com" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                                </div>
+                            </div>
                         </div>
-                        <div class="member-info-box">
-                            <h3>Zayd Mulani</h3>
-                            <p>Team Member</p>
-                        </div>
-                        <div class="member-socials">
-                            <a href="https://www.linkedin.com/in/zayd-mulani-4a72a139b/?skipRedirect=true" target="_blank" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
-                            <a href="mailto:zaydmulani@gmail.com" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+
+                        <!-- Collage Group 3 (2 members) -->
+                        <div class="team-collage-container group-3">
+                            <!-- Member 7 -->
+                            <div class="collage-member member-1">
+                                <div class="collage-bg-shape"></div>
+                                <div class="photo-wrapper">
+                                    <img src="team_member_4_1777952294001.png" alt="David Kim">
+                                </div>
+                                <div class="member-info-box">
+                                    <h3>David Kim</h3>
+                                    <p>Volunteer Coordinator</p>
+                                </div>
+                                <div class="member-socials">
+                                    <a href="#" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                                    <a href="mailto:david@pagesforchange.org" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                                </div>
+                            </div>
+
+                            <!-- Member 8 -->
+                            <div class="collage-member member-3">
+                                <div class="collage-bg-shape"></div>
+                                <div class="photo-wrapper">
+                                    <img src="https://media.istockphoto.com/id/1451587807/vector/user-profile-icon-vector-avatar-or-person-icon-profile-picture-portrait-symbol-vector.jpg?s=612x612&w=0&k=20&c=yDJ4ITX1cHMh25Lt1vI1zBn2cAKKAlByHBvPJ8gEiIg=" alt="Jessica Taylor">
+                                </div>
+                                <div class="member-info-box">
+                                    <h3>Jessica Taylor</h3>
+                                    <p>Operations Manager</p>
+                                </div>
+                                <div class="member-socials">
+                                    <a href="#" class="social-btn linkedin" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                                    <a href="mailto:jessica@pagesforchange.org" class="social-btn email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-            </div>
+            </section>
         </section>
     </main>
 
@@ -307,6 +397,6 @@
     </footer>
 
 
-    <script src="script.js?v=34"></script>
+    <script src="script.js?v=46"></script>
 </body>
 </html>
