@@ -1222,6 +1222,78 @@ h1 {
     font-family: var(--font-body);
 }
 
+/* Donation Card Coming Soon State */
+.hidden {
+    display: none !important;
+}
+
+.donation-coming-soon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: donationFadeIn 0.4s ease forwards;
+}
+
+.coming-soon-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    animation: floatIcon 2s ease-in-out infinite;
+}
+
+.coming-soon-message {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #4a5568;
+    margin-bottom: 2rem;
+    font-family: var(--font-body);
+}
+
+.coming-soon-message p {
+    color: #4a5568 !important;
+    font-size: 1rem !important;
+    text-align: center !important;
+    margin-bottom: 0.8rem !important;
+    font-weight: 500 !important;
+}
+
+.coming-soon-message .sub-text {
+    font-size: 0.85rem !important;
+    color: #718096 !important;
+    margin-top: 0.8rem !important;
+    font-style: italic !important;
+    font-weight: 400 !important;
+}
+
+.don-back-btn {
+    width: 100%;
+    background-color: #1a365d;
+    color: white;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.15rem;
+    padding: 1rem;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.don-back-btn:hover {
+    background-color: #2b4c7e;
+    transform: scale(1.02);
+}
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+@keyframes donationFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 #donate .container h2 {
     margin-top: 180px;
 }

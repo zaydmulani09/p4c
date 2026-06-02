@@ -6,7 +6,7 @@
     <title>Pages for Change - Empowering Through Reading</title>
     <link rel="icon" type="image/png" href="download.png">
     <meta name="description" content="Providing books to those in need. Join our charity to make a difference.">
-    <link rel="stylesheet" href="style.css?v=60">
+    <link rel="stylesheet" href="style.css?v=61">
     <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -69,16 +69,31 @@
         <section class="content-section alternate" id="donate">
             <div class="donation-card-wrapper">
                 <div class="donation-card" id="donation-card">
-                    <h3>JOIN #P4C!</h3>
-                    <p class="subtitle">1 book changes a life</p>
-                    <div class="donation-grid">
-                        <button class="don-btn">5 books</button>
-                        <button class="don-btn active">20 books</button>
-                        <button class="don-btn">50 books</button>
-                        <button class="don-btn">100 books</button>
+                    <!-- Form State -->
+                    <div class="donation-card-form" id="donation-form-state">
+                        <h3>JOIN #P4C!</h3>
+                        <p class="subtitle">1 book changes a life</p>
+                        <div class="donation-grid">
+                            <button class="don-btn">5 books</button>
+                            <button class="don-btn active">20 books</button>
+                            <button class="don-btn">50 books</button>
+                            <button class="don-btn">100 books</button>
+                        </div>
+                        <input type="text" class="don-input" placeholder="Other amount">
+                        <button class="don-submit">Next</button>
                     </div>
-                    <input type="text" class="don-input" placeholder="Other amount">
-                    <button class="don-submit">Next</button>
+
+                    <!-- Coming Soon State -->
+                    <div class="donation-coming-soon hidden" id="donation-soon-state">
+                        <div class="coming-soon-icon">✨</div>
+                        <h3>COMING SOON!</h3>
+                        <p class="subtitle">We're building this</p>
+                        <div class="coming-soon-message">
+                            <p>We don't have an online donation page set up just yet, but we are working hard to bring it to you soon!</p>
+                            <p class="sub-text">In the meantime, feel free to drop off book donations at our New Jersey location below.</p>
+                        </div>
+                        <button class="don-back-btn">Go Back</button>
+                    </div>
                 </div>
             </div>
             <div class="container">
@@ -375,6 +390,6 @@
 
 
     <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
-    <script src="script.js?v=56"></script>
+    <script src="script.js?v=57"></script>
 </body>
 </html>

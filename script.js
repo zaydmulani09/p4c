@@ -165,5 +165,45 @@ document.addEventListener('DOMContentLoaded', () => {
         setContainerHeight();
         handleScroll();
     }
+
+    // Donation Card Component Logic
+    const donButtons = document.querySelectorAll('.don-btn');
+    const donInput = document.querySelector('.don-input');
+    const donSubmit = document.querySelector('.don-submit');
+    const donBackBtn = document.querySelector('.don-back-btn');
+    const donFormState = document.getElementById('donation-form-state');
+    const donSoonState = document.getElementById('donation-soon-state');
+
+    if (donButtons.length > 0 && donInput && donSubmit && donFormState && donSoonState) {
+        // Toggle preset buttons active class
+        donButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                donButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                donInput.value = ''; // clear custom amount input
+            });
+        });
+
+        // Typing custom amount clears preset active classes
+        donInput.addEventListener('input', () => {
+            if (donInput.value.trim() !== '') {
+                donButtons.forEach(b => b.classList.remove('active'));
+            }
+        });
+
+        // Submit transition to Coming Soon state
+        donSubmit.addEventListener('click', () => {
+            donFormState.classList.add('hidden');
+            donSoonState.classList.remove('hidden');
+        });
+
+        // Back transition to Form state
+        if (donBackBtn) {
+            donBackBtn.addEventListener('click', () => {
+                donSoonState.classList.add('hidden');
+                donFormState.classList.remove('hidden');
+            });
+        }
+    }
 });
 
