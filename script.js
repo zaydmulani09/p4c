@@ -1,4 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Lenis Smooth Scroll
+    const lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        orientation: 'vertical',
+        gestureOrientation: 'vertical',
+        smoothWheel: true,
+        wheelMultiplier: 1,
+        touchMultiplier: 2,
+        infinite: false,
+    });
+
+    function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    // Keep scroll listeners active with Lenis scroll
+    lenis.on('scroll', () => {
+        // Dispatch window scroll event to ensure all scroll-dependent parallax and horizontal scroll layouts update correctly
+        window.dispatchEvent(new Event('scroll'));
+    });
+
     const menuToggle = document.getElementById('menu-toggle');
     const menuClose = document.getElementById('menu-close');
     const navOverlay = document.getElementById('nav-overlay');
@@ -17,9 +41,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close menu when clicking the close button
     menuClose.addEventListener('click', closeMenu);
 
-    // Close menu when clicking any link inside the nav
+    // Close menu and smooth scroll when clicking overlay menu links
     menuLinks.forEach(link => {
-        link.addEventListener('click', closeMenu);
+        link.addEventListener('click', (e) => {
+            closeMenu();
+            const targetId = link.getAttribute('href');
+            if (targetId && targetId.startsWith('#')) {
+                e.preventDefault();
+                const targetEl = document.querySelector(targetId);
+                if (targetEl) {
+                    setTimeout(() => {
+                        lenis.scrollTo(targetEl);
+                    }, 300);
+                }
+            }
+        });
+    });
+
+    // Smooth scroll for all other anchor links (like hero buttons)
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        if (anchor.closest('.overlay-menu')) return;
+
+        anchor.addEventListener('click', (e) => {
+            const targetId = anchor.getAttribute('href');
+            if (targetId === '#') return;
+            const targetEl = document.querySelector(targetId);
+            if (targetEl) {
+                e.preventDefault();
+                lenis.scrollTo(targetEl);
+            }
+        });
     });
 
     // 3D Bookshelf Interactions

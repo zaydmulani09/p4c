@@ -14,7 +14,7 @@
 }
 
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: initial;
 }
 
 * {
@@ -299,6 +299,7 @@ h1 {
     opacity: 0.9;
     text-shadow: none; /* Keep label clean */
     font-weight: 800;
+    text-align: left;
 }
 
 .footer-image-container::after {
