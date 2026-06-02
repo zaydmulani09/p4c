@@ -5,6 +5,7 @@
     --overlay-bg: #0d233e;
     --font-heading: 'Montserrat', sans-serif;
     --font-body: 'Inter', sans-serif;
+    --font-accent-serif: 'Josefin Slab', serif;
     
     /* Collage Colors */
     --collage-bg: #fdf2e9;
@@ -28,6 +29,26 @@ body {
     color: var(--text-color);
     background-color: var(--primary-color);
     overflow-x: hidden;
+}
+
+/* Custom Accent Font Settings (Josefin Slab) */
+.section-subtitle {
+    font-family: var(--font-accent-serif);
+    font-size: 1.45rem !important;
+    font-style: italic;
+    font-weight: 600;
+}
+
+.key-word {
+    font-family: var(--font-accent-serif);
+    font-weight: 700;
+    font-size: 1.12em;
+    color: var(--collage-purple);
+    display: inline;
+}
+
+#donate .key-word {
+    color: var(--accent-color);
 }
 
 /* Navbar */
@@ -166,6 +187,43 @@ body {
     transform: rotate(0deg) scale(1.1);
 }
 
+/* Nav Overlay Socials */
+.overlay-socials {
+    margin-top: auto;
+    padding-bottom: 2rem;
+    display: flex;
+    gap: 1.5rem;
+    justify-content: flex-start;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease 0.65s, transform 0.5s ease 0.65s;
+}
+
+.nav-overlay.active .overlay-socials {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.overlay-social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1.3rem;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.overlay-social-link:hover {
+    background-color: var(--accent-color);
+    color: var(--primary-color);
+    transform: scale(1.15);
+}
+
 /* Hero Section */
 .hero {
     position: relative;
@@ -262,7 +320,9 @@ h1 {
     font-size: 1.1rem;
     padding: 0.6rem 2rem;
     margin-bottom: 1.5rem;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     transform: skewX(-15deg);
     box-shadow: 6px 6px 0px rgba(0,0,0,0.25);
     letter-spacing: 0.15em;
@@ -274,6 +334,14 @@ h1 {
 .hashtag-badge:hover {
     transform: skewX(-15deg) translateY(-2px);
     box-shadow: 8px 8px 0px rgba(0,0,0,0.3);
+}
+
+.badge-logo {
+    height: 1.35rem;
+    width: auto;
+    margin-right: 0.6rem;
+    transform: skewX(15deg); /* un-skews the logo icon so it's straight */
+    display: inline-block;
 }
 
 .counter {
@@ -514,12 +582,13 @@ h1 {
 .about-dots {
     position: absolute;
     bottom: 5%;
-    left: 5%;
+    left: -60px;
     width: 120px;
     height: 120px;
     background-image: radial-gradient(var(--collage-orange) 20%, transparent 20%);
     background-size: 24px 24px;
     z-index: 1;
+    opacity: 0.3;
 }
 
 .about-rect-1 {
@@ -888,17 +957,17 @@ h1 {
     
     /* Group 2 Configuration Overrides */
     .group-2 .member-1 {
-        top: 25% !important;
-        left: 10% !important;
+        top: 20% !important;
+        left: 5% !important;
         bottom: auto !important;
-        width: 280px !important;
+        width: 260px !important;
         --member-color: var(--collage-orange) !important;
     }
     .group-2 .member-1 .collage-bg-shape { background-color: var(--member-color) !important; }
     
     .group-2 .member-2 {
         top: 0% !important;
-        left: 42% !important;
+        left: 30% !important;
         bottom: auto !important;
         width: 250px !important;
         --member-color: var(--collage-purple) !important;
@@ -906,13 +975,22 @@ h1 {
     .group-2 .member-2 .collage-bg-shape { background-color: var(--member-color) !important; }
     
     .group-2 .member-3 {
-        top: 20% !important;
-        right: 12% !important;
+        top: 25% !important;
+        left: 54% !important;
         bottom: auto !important;
-        width: 290px !important;
+        width: 260px !important;
         --member-color: var(--collage-orange) !important;
     }
     .group-2 .member-3 .collage-bg-shape { background-color: var(--member-color) !important; }
+
+    .group-2 .member-4 {
+        top: 5% !important;
+        left: 76% !important;
+        bottom: auto !important;
+        width: 250px !important;
+        --member-color: var(--collage-purple) !important;
+    }
+    .group-2 .member-4 .collage-bg-shape { background-color: var(--member-color) !important; }
     
     /* Group 3 Configuration Overrides (2 members) */
     .group-3 .member-1 {
@@ -1058,8 +1136,10 @@ h1 {
 }
 
 .donation-card .subtitle {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-family: var(--font-accent-serif);
+    font-style: italic;
+    font-size: 1.25rem;
+    font-weight: 600;
     margin-bottom: 1.5rem;
     color: #2b4c7e;
     text-align: center;
