@@ -1116,13 +1116,24 @@ h1 {
 }
 
 .donation-card {
-    background-color: white;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
     border-radius: 8px;
-    padding: 2.5rem;
-    width: 90%;
-    max-width: 480px;
+    padding: 0 !important;
+    width: 512px;
+    max-width: 90%;
+    height: 512px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.15);
     scroll-margin-top: 140px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.donation-card iframe {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
 }
 
 .donation-card h3 {
