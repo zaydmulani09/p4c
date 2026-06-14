@@ -1603,7 +1603,7 @@ h1 {
     transform: translateX(-50%);
     width: 90%;
     height: 15px;
-    background-image: url('wood_texture.png');
+    background-image: url('wood-texture.png');
     background-size: cover;
     background-position: center;
     background-color: #c29a6b; /* Lighter wood base */
