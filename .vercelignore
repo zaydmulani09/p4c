@@ -1,0 +1,8 @@
+# Exclude portal source files from deployment.
+# Vite uses these during the build step, but only portal/dist/ should be served.
+# Without this, portal/index.html (dev HTML) is served at /portal as a static
+# directory index, taking priority over the rewrite to portal/dist/index.html.
+portal/index.html
+portal/src/
+portal/public/
+portal/node_modules/
