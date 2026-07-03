@@ -52,7 +52,8 @@ CREATE TABLE organizations (
   outcome              text,
   logged_by            uuid        REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at           timestamptz NOT NULL DEFAULT now(),
-  updated_at           timestamptz NOT NULL DEFAULT now()
+  updated_at           timestamptz NOT NULL DEFAULT now(),
+  row_number           integer
 );
 
 CREATE TABLE books (
@@ -66,7 +67,8 @@ CREATE TABLE books (
   quantity      integer     NOT NULL DEFAULT 1,
   date_received date,
   logged_by     uuid        REFERENCES auth.users(id) ON DELETE SET NULL,
-  created_at    timestamptz NOT NULL DEFAULT now()
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  row_number    integer
 );
 
 CREATE TABLE distributions (

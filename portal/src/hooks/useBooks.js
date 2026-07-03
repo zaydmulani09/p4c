@@ -24,7 +24,7 @@ export function useBooks(filters = {}, page = 0) {
       genre     = '',
       ageRange  = '',
       condition = '',
-      sortCol   = 'created_at',
+      sortCol   = 'row_number',
       sortDir   = 'asc',
     } = filters
 

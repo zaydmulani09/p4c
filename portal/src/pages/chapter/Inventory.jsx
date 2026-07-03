@@ -12,6 +12,7 @@ const COND_ORDER = ['New', 'Good', 'Fair', 'Poor']
 const AGE_ORDER  = ['0-3', '4-6', '7-9', '10-12', '13+', 'All Ages']
 
 const INVENTORY_SORTS = [
+  { value: 'row_asc',        label: 'Spreadsheet Order',          col: 'row_number', dir: 'asc'  },
   { value: 'date_asc',       label: 'Date Added (oldest first)',  col: 'created_at', dir: 'asc'  },
   { value: 'date_desc',      label: 'Date Added (newest first)',  col: 'created_at', dir: 'desc' },
   { value: 'title_asc',      label: 'Title A → Z',               col: 'title',      dir: 'asc'  },
@@ -529,8 +530,8 @@ export default function Inventory() {
   const [editCell,   setEditCell]   = useState(null)
   const [editValue,  setEditValue]  = useState('')
   const [page,       setPage]       = useState(0)
-  const [sortKey,    setSortKey]    = useState('date_asc')
-  const [sortCol,    setSortCol]    = useState('created_at')
+  const [sortKey,    setSortKey]    = useState('row_asc')
+  const [sortCol,    setSortCol]    = useState('row_number')
   const [sortDir,    setSortDir]    = useState('asc')
   const [search,     setSearch]     = useState('')
   const [genre,      setGenre]      = useState('')

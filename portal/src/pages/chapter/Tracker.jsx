@@ -8,6 +8,7 @@ const CONTACT_METHODS = ['Email', 'Phone', 'In Person', 'Social Media', 'Mail', 
 const CLOSED_SET      = new Set(['Partnership Established', 'Not Interested', 'Closed'])
 
 const TRACKER_SORTS = [
+  { value: 'row_asc',        label: 'Spreadsheet Order',                 col: 'row_number',           dir: 'asc'  },
   { value: 'date_asc',       label: 'Date Added (oldest first)',         col: 'created_at',           dir: 'asc'  },
   { value: 'date_desc',      label: 'Date Added (newest first)',         col: 'created_at',           dir: 'desc' },
   { value: 'name_asc',       label: 'Organization Name A → Z',          col: 'org_name',             dir: 'asc'  },
@@ -643,8 +644,8 @@ export default function Tracker() {
   const [editCell,      setEditCell]      = useState(null)  // { rowId, col }
   const [editValue,     setEditValue]     = useState('')
   const [page,          setPage]          = useState(0)
-  const [sortKey,       setSortKey]       = useState('date_asc')
-  const [sortCol,       setSortCol]       = useState('created_at')
+  const [sortKey,       setSortKey]       = useState('row_asc')
+  const [sortCol,       setSortCol]       = useState('row_number')
   const [sortDir,       setSortDir]       = useState('asc')
   const [search,        setSearch]        = useState('')
   const [statusFilter,  setStatusFilter]  = useState([])

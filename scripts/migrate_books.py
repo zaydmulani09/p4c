@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-Migrate South Brunswick outreach CSV into Supabase as Chapter 001.
+Migrate books CSV into Supabase.
 
 Usage:
-    python migrate_sheets.py outreach.csv
-    python migrate_sheets.py outreach.csv --dry-run
+    python migrate_books.py books.csv
+    python migrate_books.py books.csv --chapter-id <uuid> --dry-run
+
+Expected CSV columns (case-sensitive):
+    Title, Author, Genre, Age Range, Condition, Quantity, Date Received
 
 Requires environment variables:
-    SUPABASE_URL        - e.g. https://xxxx.supabase.co
+    SUPABASE_URL         - e.g. https://xxxx.supabase.co
     SUPABASE_SERVICE_KEY - service role key (bypasses RLS)
 """
 
@@ -23,30 +26,17 @@ import urllib.error
 BATCH_SIZE = 50
 
 COLUMN_MAP = {
-    'Organization Name':   'org_name',
-    'Organization Type':   'org_type',
-    'Website':             'website',
-    'Contact Name':        'contact_name',
-    'Position / Title':    'contact_title',
-    'Email Address':       'email',
-    'Phone Number':        'phone',
-    'Township/ State':     'township',
-    'Date Researched':     'date_researched',
-    'Date First Contacted':'date_first_contacted',
-    'Contact Method':      'contact_method',
-    'Current Status':      'current_status',
-    'Follow-Up Date':      'follow_up_date',
-    'Last Response Date':  'last_response_date',
-    'Partnership Interest':'partnership_interest',
-    'Notes':               'notes',
-    'Outcome':             'outcome',
-    'Logged By':           'logged_by',
+    'Title':         'title',
+    'Author':        'author',
+    'Genre':         'genre',
+    'Age Range':     'age_range',
+    'Condition':     'condition',
+    'Quantity':      'quantity',
+    'Date Received': 'date_received',
 }
 
-DATE_FIELDS = {
-    'date_researched', 'date_first_contacted',
-    'follow_up_date', 'last_response_date',
-}
+DATE_FIELDS    = {'date_received'}
+INTEGER_FIELDS = {'quantity'}
 
 
 def parse_date(val):
@@ -66,19 +56,26 @@ def map_row(csv_row, chapter_id):
         val = csv_row.get(csv_col, '').strip() or None
         if db_col in DATE_FIELDS:
             val = parse_date(val) if val else None
+        elif db_col in INTEGER_FIELDS:
+            try:
+                val = int(val) if val else 1
+            except ValueError:
+                val = 1
         record[db_col] = val
+    if not record.get('quantity'):
+        record['quantity'] = 1
     return record
 
 
 def insert_batch(batch, url, headers, dry_run):
     if dry_run:
         for row in batch:
-            print(f"  [dry-run] {row.get('org_name', '?')} — {row.get('current_status', '')}")
+            print(f"  [dry-run] {row.get('title', '?')} — qty {row.get('quantity', '?')} — row {row.get('row_number', '?')}")
         return 0
 
     body = json.dumps(batch).encode('utf-8')
     req = urllib.request.Request(
-        f"{url}/rest/v1/organizations",
+        f"{url}/rest/v1/books",
         data=body,
         headers={**headers, 'Content-Type': 'application/json', 'Prefer': 'return=minimal'},
         method='POST',
@@ -95,10 +92,10 @@ def insert_batch(batch, url, headers, dry_run):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Migrate outreach CSV to Supabase')
-    parser.add_argument('csv_path', help='Path to the outreach CSV file')
-    parser.add_argument('--chapter-id', default='REPLACE_WITH_SOUTH_BRUNSWICK_UUID',
-                        help='Chapter UUID for South Brunswick (Chapter 001)')
+    parser = argparse.ArgumentParser(description='Migrate books CSV to Supabase')
+    parser.add_argument('csv_path', help='Path to the books CSV file')
+    parser.add_argument('--chapter-id', default='e554fa97-f949-4600-8023-b65d60edd034',
+                        help='Chapter UUID')
     parser.add_argument('--dry-run', action='store_true',
                         help='Print rows without inserting')
     args = parser.parse_args()
@@ -124,32 +121,32 @@ def main():
     with open(args.csv_path, newline='', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for csv_row in reader:
-            org_name = csv_row.get('Organization Name', '').strip()
-            if not org_name:
+            title = csv_row.get('Title', '').strip()
+            if not title:
                 continue
             row_number += 1
             record = map_row(csv_row, args.chapter_id)
             record['row_number'] = row_number
             rows.append(record)
 
-    total   = len(rows)
-    errors  = 0
+    total    = len(rows)
+    errors   = 0
     inserted = 0
 
-    print(f"Found {total} rows to migrate (chapter_id={args.chapter_id})")
+    print(f"Found {total} books to migrate (chapter_id={args.chapter_id})")
     if args.dry_run:
         print('[dry-run mode — no data will be inserted]\n')
 
     for i in range(0, total, BATCH_SIZE):
-        batch = rows[i:i + BATCH_SIZE]
+        batch     = rows[i:i + BATCH_SIZE]
         batch_end = min(i + BATCH_SIZE, total)
-        errs = insert_batch(batch, supabase_url, headers, args.dry_run)
-        errors += errs
+        errs      = insert_batch(batch, supabase_url, headers, args.dry_run)
+        errors   += errs
         inserted += len(batch) - errs
         if not args.dry_run:
             print(f"Inserted row {batch_end}/{total}...")
 
-    print(f"\nMigration complete. {inserted} rows inserted, {errors} errors.")
+    print(f"\nMigration complete. {inserted} books inserted, {errors} errors.")
 
 
 if __name__ == '__main__':

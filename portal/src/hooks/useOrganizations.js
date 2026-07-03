@@ -24,7 +24,7 @@ export function useOrganizations(filters = {}, page = 0) {
       orgType  = '',
       dateFrom = '',
       dateTo   = '',
-      sortCol  = 'created_at',
+      sortCol  = 'row_number',
       sortDir  = 'asc',
     } = filters
 
