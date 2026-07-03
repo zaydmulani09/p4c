@@ -7,8 +7,10 @@ async function fetchNetworkSummary(stats) {
   const cacheKey = `p4c_network_summary_w${weekNum}`
   const cached   = localStorage.getItem(cacheKey)
   if (cached) {
-    const { text, ts } = JSON.parse(cached)
-    if (Date.now() - ts < 7 * 24 * 60 * 60 * 1000) return text
+    try {
+      const { text, ts } = JSON.parse(cached)
+      if (text && !text.toLowerCase().includes('unavailable') && Date.now() - ts < 7 * 24 * 60 * 60 * 1000) return text
+    } catch {}
   }
 
   const apiKey = import.meta.env.VITE_GROQ_API_KEY

@@ -2,11 +2,14 @@ const GROQ_API = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL    = 'llama3-70b-8192'
 const FALLBACK = 'Summary unavailable — check back later'
 
+console.log('Groq key present:', !!import.meta.env.VITE_GROQ_API_KEY)
+
 function getCached(key) {
   try {
     const raw = localStorage.getItem(key)
     if (!raw) return null
     const { text, ts } = JSON.parse(raw)
+    if (!text || text.toLowerCase().includes('unavailable')) return null
     if (Date.now() - ts < 24 * 60 * 60 * 1000) return text
   } catch {}
   return null
