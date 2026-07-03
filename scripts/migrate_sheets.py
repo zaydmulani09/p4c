@@ -40,7 +40,7 @@ COLUMN_MAP = {
     'Partnership Interest':'partnership_interest',
     'Notes':               'notes',
     'Outcome':             'outcome',
-    'Logged By':           'logged_by',
+    # 'Logged By' is a UUID FK — skip during migration; left NULL
 }
 
 DATE_FIELDS = {
@@ -122,7 +122,15 @@ def main():
     rows = []
     row_number = 0
     with open(args.csv_path, newline='', encoding='utf-8-sig') as f:
-        reader = csv.DictReader(f)
+        raw = csv.reader(f)
+        first = next(raw)  # row 1: spreadsheet title — skip
+        # If the first cell looks like a title (not a known header), row 2 has real headers
+        if first and first[0].strip() != 'Organization Name':
+            reader = csv.DictReader(f)  # file pointer is now at row 2
+        else:
+            # first row was already the header; re-open with DictReader from top
+            f.seek(0)
+            reader = csv.DictReader(f)
         for csv_row in reader:
             org_name = csv_row.get('Organization Name', '').strip()
             if not org_name:

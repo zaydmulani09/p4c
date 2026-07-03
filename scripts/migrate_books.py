@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Migrate books CSV into Supabase.
+Migrate books CSV or XLSX into Supabase.
 
 Usage:
     python migrate_books.py books.csv
-    python migrate_books.py books.csv --chapter-id <uuid> --dry-run
+    python migrate_books.py "Book Inventory.xlsx" --chapter-id <uuid> --dry-run
 
-Expected CSV columns (case-sensitive):
+Expected columns (case-insensitive match):
     Title, Author, Genre, Age Range, Condition, Quantity, Date Received
 
 Requires environment variables:
@@ -26,13 +26,13 @@ import urllib.error
 BATCH_SIZE = 50
 
 COLUMN_MAP = {
-    'Title':         'title',
-    'Author':        'author',
-    'Genre':         'genre',
-    'Age Range':     'age_range',
-    'Condition':     'condition',
-    'Quantity':      'quantity',
-    'Date Received': 'date_received',
+    'Title / Description': 'title',
+    'Genre':               'genre',
+    'Age Group':           'age_range',
+    'Condition':           'condition',
+    'Qty Available':       'quantity',
+    'Date Received':       'date_received',
+    'Source / Donor':      'author',   # closest available field; stored in author column
 }
 
 DATE_FIELDS    = {'date_received'}
@@ -58,11 +58,11 @@ def map_row(csv_row, chapter_id):
             val = parse_date(val) if val else None
         elif db_col in INTEGER_FIELDS:
             try:
-                val = int(val) if val else 1
-            except ValueError:
+                val = int(float(val)) if val and val != 'None' else 1
+            except (ValueError, TypeError):
                 val = 1
         record[db_col] = val
-    if not record.get('quantity'):
+    if not record.get('quantity') or record['quantity'] < 1:
         record['quantity'] = 1
     return record
 
@@ -93,7 +93,7 @@ def insert_batch(batch, url, headers, dry_run):
 
 def main():
     parser = argparse.ArgumentParser(description='Migrate books CSV to Supabase')
-    parser.add_argument('csv_path', help='Path to the books CSV file')
+    parser.add_argument('csv_path', help='Path to the books CSV or XLSX file')
     parser.add_argument('--chapter-id', default='e554fa97-f949-4600-8023-b65d60edd034',
                         help='Chapter UUID')
     parser.add_argument('--dry-run', action='store_true',
@@ -118,16 +118,36 @@ def main():
 
     rows = []
     row_number = 0
-    with open(args.csv_path, newline='', encoding='utf-8-sig') as f:
-        reader = csv.DictReader(f)
-        for csv_row in reader:
-            title = csv_row.get('Title', '').strip()
-            if not title:
+    path = args.csv_path
+
+    if path.lower().endswith('.xlsx'):
+        import openpyxl
+        wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+        ws = wb.active
+        all_rows = list(ws.iter_rows(values_only=True))
+        # Row 1 = spreadsheet title, Row 2 = manager info, Row 3 = column headers
+        raw_headers = [str(v).strip() if v is not None else '' for v in all_rows[2]]
+        for row in all_rows[3:]:
+            csv_row = {raw_headers[i]: (str(v).strip() if v is not None else '') for i, v in enumerate(row)}
+            title = csv_row.get('Title / Description', '').strip()
+            if not title or title == 'None':
                 continue
             row_number += 1
             record = map_row(csv_row, args.chapter_id)
             record['row_number'] = row_number
             rows.append(record)
+        wb.close()
+    else:
+        with open(path, newline='', encoding='utf-8-sig') as f:
+            reader = csv.DictReader(f)
+            for csv_row in reader:
+                title = csv_row.get('Title', '').strip()
+                if not title:
+                    continue
+                row_number += 1
+                record = map_row(csv_row, args.chapter_id)
+                record['row_number'] = row_number
+                rows.append(record)
 
     total    = len(rows)
     errors   = 0
