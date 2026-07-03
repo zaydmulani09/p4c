@@ -25,7 +25,7 @@ export function useBooks(filters = {}, page = 0) {
       ageRange  = '',
       condition = '',
       sortCol   = 'created_at',
-      sortDir   = 'desc',
+      sortDir   = 'asc',
     } = filters
 
     let q = supabase

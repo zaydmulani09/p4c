@@ -8,6 +8,20 @@ const GENRE_OPTIONS     = ['Fiction', 'Nonfiction', 'Picture Book', 'Early Reade
 const AGE_OPTIONS       = ['0-3', '4-6', '7-9', '10-12', '13+', 'All Ages']
 const CONDITION_OPTIONS = ['New', 'Good', 'Fair', 'Poor']
 
+const COND_ORDER = ['New', 'Good', 'Fair', 'Poor']
+const AGE_ORDER  = ['0-3', '4-6', '7-9', '10-12', '13+', 'All Ages']
+
+const INVENTORY_SORTS = [
+  { value: 'date_asc',       label: 'Date Added (oldest first)',  col: 'created_at', dir: 'asc'  },
+  { value: 'date_desc',      label: 'Date Added (newest first)',  col: 'created_at', dir: 'desc' },
+  { value: 'title_asc',      label: 'Title A → Z',               col: 'title',      dir: 'asc'  },
+  { value: 'title_desc',     label: 'Title Z → A',               col: 'title',      dir: 'desc' },
+  { value: 'qty_desc',       label: 'Quantity (high to low)',     col: 'quantity',   dir: 'desc' },
+  { value: 'qty_asc',        label: 'Quantity (low to high)',     col: 'quantity',   dir: 'asc'  },
+  { value: 'condition_best', label: 'Condition (best first)',     col: 'created_at', dir: 'asc'  },
+  { value: 'age_youngest',   label: 'Age Range (youngest first)', col: 'created_at', dir: 'asc'  },
+]
+
 const COLUMNS = [
   { key: 'title',         label: 'Title',         type: 'text',   w: 220, editable: true },
   { key: 'author',        label: 'Author',        type: 'text',   w: 175, editable: true },
@@ -408,7 +422,7 @@ function TotalsBar({ totals }) {
 }
 
 // ── Filters Bar ───────────────────────────────────────────────
-function FiltersBar({ search, onSearch, genre, onGenre, ageRange, onAgeRange, condition, onCondition, onClearAll }) {
+function FiltersBar({ search, onSearch, genre, onGenre, ageRange, onAgeRange, condition, onCondition, sortKey, onSortKey, onClearAll }) {
   const hasFilters = search || genre || ageRange || condition
   return (
     <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '1rem' }}>
@@ -436,6 +450,23 @@ function FiltersBar({ search, onSearch, genre, onGenre, ageRange, onAgeRange, co
           {options.map(o => <option key={o} value={o}>{o}</option>)}
         </select>
       ))}
+      <select
+        value={sortKey}
+        onChange={e => onSortKey(e.target.value)}
+        style={{
+          padding: '0.5rem 0.9rem',
+          background: 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '8px',
+          color: 'rgba(255,255,255,0.7)',
+          fontFamily: 'var(--font-body)',
+          fontWeight: 600,
+          fontSize: '0.82rem',
+          cursor: 'pointer',
+        }}
+      >
+        {INVENTORY_SORTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
       {hasFilters && (
         <button onClick={onClearAll} style={{
           padding: '0.45rem 0.9rem', background: 'transparent',
@@ -498,21 +529,40 @@ export default function Inventory() {
   const [editCell,   setEditCell]   = useState(null)
   const [editValue,  setEditValue]  = useState('')
   const [page,       setPage]       = useState(0)
+  const [sortKey,    setSortKey]    = useState('date_asc')
   const [sortCol,    setSortCol]    = useState('created_at')
-  const [sortDir,    setSortDir]    = useState('desc')
+  const [sortDir,    setSortDir]    = useState('asc')
   const [search,     setSearch]     = useState('')
   const [genre,      setGenre]      = useState('')
   const [ageRange,   setAgeRange]   = useState('')
   const [condition,  setCondition]  = useState('')
 
   const filters = { search, genre, ageRange, condition, sortCol, sortDir }
-  const { books, count, totalPages, loading, memberMap, totals, addBook, updateBook, logDistribution } = useBooks(filters, page)
+  const { books: rawBooks, count, totalPages, loading, memberMap, totals, addBook, updateBook, logDistribution } = useBooks(filters, page)
+
+  const books = sortKey === 'condition_best'
+    ? [...rawBooks].sort((a, b) => COND_ORDER.indexOf(a.condition ?? '') - COND_ORDER.indexOf(b.condition ?? ''))
+    : sortKey === 'age_youngest'
+    ? [...rawBooks].sort((a, b) => AGE_ORDER.indexOf(a.age_range ?? '') - AGE_ORDER.indexOf(b.age_range ?? ''))
+    : rawBooks
 
   function upd(fn) { fn(); setPage(0) }
 
+  function handleSortKey(key) {
+    const opt = INVENTORY_SORTS.find(s => s.value === key)
+    setSortKey(key)
+    setSortCol(opt.col)
+    setSortDir(opt.dir)
+    setPage(0)
+  }
+
   function handleSort(col) {
-    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-    else { setSortCol(col); setSortDir('asc') }
+    const newDir = sortCol === col ? (sortDir === 'asc' ? 'desc' : 'asc') : 'asc'
+    const match = INVENTORY_SORTS.find(s => s.col === col && s.dir === newDir && s.value !== 'condition_best' && s.value !== 'age_youngest')
+    if (match) setSortKey(match.value)
+    else setSortKey('')
+    setSortCol(col)
+    setSortDir(newDir)
     setPage(0)
   }
 
@@ -539,6 +589,7 @@ export default function Inventory() {
           genre={genre}   onGenre={v => upd(() => setGenre(v))}
           ageRange={ageRange} onAgeRange={v => upd(() => setAgeRange(v))}
           condition={condition} onCondition={v => upd(() => setCondition(v))}
+          sortKey={sortKey} onSortKey={handleSortKey}
           onClearAll={() => { setSearch(''); setGenre(''); setAgeRange(''); setCondition(''); setPage(0) }}
         />
         <div style={{ display: 'flex', gap: '0.6rem', flexShrink: 0 }}>

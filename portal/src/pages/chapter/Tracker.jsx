@@ -7,6 +7,17 @@ const ORG_TYPE_OPTIONS = ['Library', 'School', 'Community Center', 'Church/Relig
 const CONTACT_METHODS = ['Email', 'Phone', 'In Person', 'Social Media', 'Mail', 'Other']
 const CLOSED_SET      = new Set(['Partnership Established', 'Not Interested', 'Closed'])
 
+const TRACKER_SORTS = [
+  { value: 'date_asc',       label: 'Date Added (oldest first)',         col: 'created_at',           dir: 'asc'  },
+  { value: 'date_desc',      label: 'Date Added (newest first)',         col: 'created_at',           dir: 'desc' },
+  { value: 'name_asc',       label: 'Organization Name A → Z',          col: 'org_name',             dir: 'asc'  },
+  { value: 'name_desc',      label: 'Organization Name Z → A',          col: 'org_name',             dir: 'desc' },
+  { value: 'status',         label: 'Status',                            col: 'current_status',       dir: 'asc'  },
+  { value: 'contacted_desc', label: 'Date First Contacted (newest)',     col: 'date_first_contacted', dir: 'desc' },
+  { value: 'interest_desc',  label: 'Partnership Interest (High → Low)', col: 'partnership_interest', dir: 'desc' },
+  { value: 'updated_desc',   label: 'Last Updated (most recent)',        col: 'updated_at',           dir: 'desc' },
+]
+
 const COLUMNS = [
   { key: 'org_name',             label: 'Organization Name',    type: 'text',   w: 200, editable: true },
   { key: 'org_type',             label: 'Organization Type',    type: 'select', w: 155, editable: true,  options: ORG_TYPE_OPTIONS },
@@ -353,7 +364,7 @@ function AddOrgPanel({ open, onClose, addOrg }) {
 }
 
 // ── Filters Bar ───────────────────────────────────────────────
-function FiltersBar({ search, onSearch, statusFilter, onStatusToggle, orgType, onOrgType, dateFrom, onDateFrom, dateTo, onDateTo, onClearAll }) {
+function FiltersBar({ search, onSearch, statusFilter, onStatusToggle, orgType, onOrgType, dateFrom, onDateFrom, dateTo, onDateTo, sortKey, onSortKey, onClearAll }) {
   const [statusOpen, setStatusOpen] = useState(false)
   const dropRef = useRef(null)
 
@@ -490,6 +501,24 @@ function FiltersBar({ search, onSearch, statusFilter, onStatusToggle, orgType, o
         }}
       />
 
+      <select
+        value={sortKey}
+        onChange={e => onSortKey(e.target.value)}
+        style={{
+          padding: '0.5rem 0.9rem',
+          background: 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '8px',
+          color: 'rgba(255,255,255,0.7)',
+          fontFamily: 'var(--font-body)',
+          fontWeight: 600,
+          fontSize: '0.82rem',
+          cursor: 'pointer',
+        }}
+      >
+        {TRACKER_SORTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+
       {hasFilters && (
         <button
           onClick={onClearAll}
@@ -614,8 +643,9 @@ export default function Tracker() {
   const [editCell,      setEditCell]      = useState(null)  // { rowId, col }
   const [editValue,     setEditValue]     = useState('')
   const [page,          setPage]          = useState(0)
+  const [sortKey,       setSortKey]       = useState('date_asc')
   const [sortCol,       setSortCol]       = useState('created_at')
-  const [sortDir,       setSortDir]       = useState('desc')
+  const [sortDir,       setSortDir]       = useState('asc')
   const [search,        setSearch]        = useState('')
   const [statusFilter,  setStatusFilter]  = useState([])
   const [orgType,       setOrgType]       = useState('')
@@ -630,9 +660,21 @@ export default function Tracker() {
     setPage(0)
   }
 
+  function handleSortKey(key) {
+    const opt = TRACKER_SORTS.find(s => s.value === key)
+    setSortKey(key)
+    setSortCol(opt.col)
+    setSortDir(opt.dir)
+    setPage(0)
+  }
+
   function handleSort(col) {
-    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-    else { setSortCol(col); setSortDir('asc') }
+    const newDir = sortCol === col ? (sortDir === 'asc' ? 'desc' : 'asc') : 'asc'
+    const match = TRACKER_SORTS.find(s => s.col === col && s.dir === newDir)
+    if (match) setSortKey(match.value)
+    else setSortKey('')
+    setSortCol(col)
+    setSortDir(newDir)
     setPage(0)
   }
 
@@ -678,6 +720,8 @@ export default function Tracker() {
           onDateFrom={v => updateFilter(() => setDateFrom(v))}
           dateTo={dateTo}
           onDateTo={v => updateFilter(() => setDateTo(v))}
+          sortKey={sortKey}
+          onSortKey={handleSortKey}
           onClearAll={clearAll}
         />
         <button

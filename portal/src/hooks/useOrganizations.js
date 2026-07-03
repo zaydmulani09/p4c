@@ -25,7 +25,7 @@ export function useOrganizations(filters = {}, page = 0) {
       dateFrom = '',
       dateTo   = '',
       sortCol  = 'created_at',
-      sortDir  = 'desc',
+      sortDir  = 'asc',
     } = filters
 
     let q = supabase
