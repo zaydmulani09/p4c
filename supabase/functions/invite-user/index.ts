@@ -4,7 +4,7 @@
  * Sends a Supabase Auth invite email and inserts the user row into public.users.
  *
  * SETUP (run once in your terminal with the Supabase CLI):
- *   supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<your service role key>
+ *   supabase secrets set SERVICE_ROLE_KEY=<your service role key>
  *
  * The service role key is never exposed to the frontend — it lives only as a
  * Supabase secret injected at runtime into this function's environment.
@@ -36,7 +36,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const serviceRoleKey = Deno.env.get('SERVICE_ROLE_KEY')!
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
     // Client scoped to the calling user — used to verify their role
