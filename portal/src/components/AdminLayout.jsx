@@ -10,10 +10,16 @@ const PAGE_TITLES = {
   '/admin/impact':       'Impact Reports',
 }
 
+function resolveTitle(pathname) {
+  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname]
+  if (pathname.startsWith('/admin/chapters/')) return 'Chapter Detail'
+  return 'Admin'
+}
+
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
-  const pageTitle = PAGE_TITLES[location.pathname] ?? 'Admin'
+  const pageTitle = resolveTitle(location.pathname)
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#1a365d' }}>

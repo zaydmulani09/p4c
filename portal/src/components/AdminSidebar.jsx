@@ -1,5 +1,7 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
+import { supabase } from '../lib/supabase.js'
 
 const NAV_ITEMS = [
   { to: '/admin',                 label: 'National Dashboard', end: true,  stub: false },
@@ -10,9 +12,44 @@ const NAV_ITEMS = [
   { to: '/admin/certificates',    label: 'Certificates',       end: false, stub: false },
 ]
 
+function ChapterJumper({ currentChapterId, onClose }) {
+  const navigate  = useNavigate()
+  const [chapters, setChapters] = useState([])
+
+  useEffect(() => {
+    supabase.from('chapters').select('id, name').eq('status', 'active').order('name')
+      .then(({ data }) => setChapters(data ?? []))
+  }, [])
+
+  if (chapters.length === 0) return null
+
+  return (
+    <div style={{ padding: '0.35rem 0.75rem 0.5rem', margin: '0 0.5rem' }}>
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.65rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>Jump to chapter</p>
+      <select
+        value={currentChapterId ?? ''}
+        onChange={e => { if (e.target.value) { navigate(`/admin/chapters/${e.target.value}`); onClose?.() } }}
+        style={{
+          width: '100%', padding: '0.4rem 0.6rem',
+          background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '7px', color: 'rgba(255,255,255,0.75)',
+          fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
+        }}
+      >
+        <option value="">Select chapter…</option>
+        {chapters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+      </select>
+    </div>
+  )
+}
+
 export default function AdminSidebar({ open, onClose }) {
   const { user, signOut } = useAuth()
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const location  = useLocation()
+
+  const chapterDetailMatch = location.pathname.match(/^\/admin\/chapters\/([^/]+)$/)
+  const currentChapterId   = chapterDetailMatch?.[1] ?? null
 
   async function handleSignOut() {
     await signOut()
@@ -63,43 +100,47 @@ export default function AdminSidebar({ open, onClose }) {
         {/* Nav */}
         <nav style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0' }}>
           {NAV_ITEMS.map(item => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              onClick={onClose}
-              style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.65rem 1rem',
-                margin: '0.1rem 0.5rem',
-                borderRadius: '8px',
-                textDecoration: 'none',
-                fontFamily: 'var(--font-body)',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
-                background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-                borderLeft: isActive ? '3px solid #F6AA3C' : '3px solid transparent',
-                transition: 'all 0.15s ease',
-              })}
-            >
-              <span style={{ flex: 1 }}>{item.label}</span>
-              {item.stub && (
-                <span style={{
-                  fontSize: '0.6rem',
-                  background: 'rgba(255,255,255,0.08)',
-                  color: 'rgba(255,255,255,0.35)',
-                  padding: '0.1rem 0.35rem',
-                  borderRadius: '4px',
-                  fontWeight: 500,
-                  letterSpacing: '0.02em',
-                }}>
-                  Soon
-                </span>
+            <div key={item.to}>
+              <NavLink
+                to={item.to}
+                end={item.end}
+                onClick={onClose}
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.65rem 1rem',
+                  margin: '0.1rem 0.5rem',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
+                  background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                  borderLeft: isActive ? '3px solid #F6AA3C' : '3px solid transparent',
+                  transition: 'all 0.15s ease',
+                })}
+              >
+                <span style={{ flex: 1 }}>{item.label}</span>
+                {item.stub && (
+                  <span style={{
+                    fontSize: '0.6rem',
+                    background: 'rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.35)',
+                    padding: '0.1rem 0.35rem',
+                    borderRadius: '4px',
+                    fontWeight: 500,
+                    letterSpacing: '0.02em',
+                  }}>
+                    Soon
+                  </span>
+                )}
+              </NavLink>
+              {item.to === '/admin/chapters' && currentChapterId && (
+                <ChapterJumper currentChapterId={currentChapterId} onClose={onClose} />
               )}
-            </NavLink>
+            </div>
           ))}
         </nav>
 

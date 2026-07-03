@@ -16,6 +16,7 @@ import Pipeline            from './chapter/Pipeline.jsx'
 import ComingSoon          from './chapter/ComingSoon.jsx'
 import AdminDashboard      from './admin/Dashboard.jsx'
 import AdminChapters       from './admin/Chapters.jsx'
+import ChapterDetail       from './admin/ChapterDetail.jsx'
 import AdminApplications   from './admin/Applications.jsx'
 import AdminResources      from './admin/Resources.jsx'
 import AdminImpact         from './admin/Impact.jsx'
@@ -40,7 +41,8 @@ export const router = createBrowserRouter(
       ),
       children: [
         { index: true,              element: <AdminDashboard /> },
-        { path: 'chapters',         element: <AdminChapters /> },
+        { path: 'chapters',                  element: <AdminChapters /> },
+        { path: 'chapters/:chapterId',       element: <ChapterDetail /> },
         { path: 'applications',     element: <AdminApplications /> },
         { path: 'resources',        element: <AdminResources /> },
         { path: 'impact',           element: <AdminImpact /> },

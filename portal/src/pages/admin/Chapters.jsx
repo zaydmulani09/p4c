@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useChapters } from '../../hooks/useChapters.js'
 
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
@@ -30,6 +31,7 @@ function StatusBadge({ status }) {
 
 // ── Expanded Chapter Row ───────────────────────────────────────
 function ChapterDetail({ chapter, onSuspend, onReactivate }) {
+  const navigate    = useNavigate()
   const [confirming, setConfirming] = useState(false)
   const [working,    setWorking]    = useState(false)
 
@@ -67,6 +69,12 @@ function ChapterDetail({ chapter, onSuspend, onReactivate }) {
       ))}
 
       <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '0.6rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => navigate(`/admin/chapters/${chapter.id}`)}
+          style={{ padding: '0.4rem 0.9rem', background: 'rgba(246,170,60,0.12)', border: '1px solid rgba(246,170,60,0.3)', borderRadius: '8px', color: '#F6AA3C', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
+        >
+          View Full Chapter →
+        </button>
         {chapter.status === 'active' ? (
           confirming ? (
             <>
