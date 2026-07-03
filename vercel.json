@@ -7,8 +7,12 @@
       "destination": "/portal/dist/assets/:file*"
     },
     {
+      "source": "/portal",
+      "destination": "/portal/dist/app.html"
+    },
+    {
       "source": "/portal/:path*",
-      "destination": "/portal/dist/index.html"
+      "destination": "/portal/dist/app.html"
     }
   ]
 }
