@@ -9,15 +9,12 @@ export function AuthProvider({ children }) {
   const [chapterId, setChapterId] = useState(null)
   const [loading,   setLoading]   = useState(true)
 
-  async function fetchProfile(userId) {
-    const { data } = await supabase
-      .from('users')
-      .select('role, chapter_id')
-      .eq('id', userId)
-      .single()
-    if (data) {
-      setRole(data.role)
-      setChapterId(data.chapter_id ?? null)
+  async function fetchProfile() {
+    const { data } = await supabase.rpc('get_my_profile')
+    const profile = Array.isArray(data) ? data[0] : data
+    if (profile) {
+      setRole(profile.role)
+      setChapterId(profile.chapter_id ?? null)
     } else {
       setRole(null)
       setChapterId(null)
@@ -30,7 +27,7 @@ export function AuthProvider({ children }) {
       async (event, session) => {
         if (session?.user) {
           setUser(session.user)
-          await fetchProfile(session.user.id)
+          await fetchProfile()
         } else {
           setUser(null)
           setRole(null)
