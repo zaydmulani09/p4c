@@ -155,7 +155,11 @@ def main():
 
     print(f"Found {total} books to migrate (chapter_id={args.chapter_id})")
     if args.dry_run:
-        print('[dry-run mode — no data will be inserted]\n')
+        print('[dry-run mode — no data will be inserted]')
+        print('\nFirst 3 rows (order check):')
+        for r in rows[:3]:
+            print(f"  row_number={r['row_number']}  title={r.get('title', '?')}")
+        print()
 
     for i in range(0, total, BATCH_SIZE):
         batch     = rows[i:i + BATCH_SIZE]
