@@ -53,6 +53,7 @@ function fmt(val, type) {
 function Cell({ org, col, editCell, editValue, onStartEdit, onEditChange, onCommit, onCancel, memberMap }) {
   const isEditing = editCell?.rowId === org.id && editCell?.col === col.key
   const inputRef  = useRef(null)
+  const isFirstCol = col.key === 'org_name'
 
   useEffect(() => {
     if (isEditing) inputRef.current?.focus()
@@ -69,7 +70,11 @@ function Cell({ org, col, editCell, editValue, onStartEdit, onEditChange, onComm
     width: col.w,
     minWidth: col.w,
     maxWidth: col.w,
-    position: 'relative',
+    position: isFirstCol ? 'sticky' : 'relative',
+    left: isFirstCol ? 0 : undefined,
+    zIndex: isFirstCol ? 1 : undefined,
+    background: isFirstCol ? '#122847' : undefined,
+    boxShadow: isFirstCol ? '2px 0 6px rgba(0,0,0,0.25)' : undefined,
     verticalAlign: 'middle',
   }
 
@@ -510,6 +515,7 @@ function FiltersBar({ search, onSearch, statusFilter, onStatusToggle, orgType, o
 // ── Column Header ─────────────────────────────────────────────
 function ColHeader({ col, sortCol, sortDir, onSort }) {
   const active = sortCol === col.key
+  const isFirstCol = col.key === 'org_name'
   return (
     <th
       onClick={() => onSort(col.key)}
@@ -528,10 +534,12 @@ function ColHeader({ col, sortCol, sortDir, onSort }) {
         whiteSpace: 'nowrap',
         position: 'sticky',
         top: 0,
-        zIndex: 2,
+        left: isFirstCol ? 0 : undefined,
+        zIndex: isFirstCol ? 3 : 2,
         width: col.w,
         minWidth: col.w,
         userSelect: 'none',
+        boxShadow: isFirstCol ? '2px 0 6px rgba(0,0,0,0.3)' : undefined,
       }}
     >
       {col.label}
@@ -685,6 +693,7 @@ export default function Tracker() {
       <div
         style={{
           overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
           border: '1px solid rgba(255,255,255,0.07)',
           borderRadius: '12px',
           background: '#122847',

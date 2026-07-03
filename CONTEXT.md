@@ -134,7 +134,7 @@ p4c/
 | P5 | National Admin Views | ✅ Complete |
 | P6 | AI Features + Impact Reports | ✅ Complete |
 | P7 | Public Portal Landing + Chapter Map | ✅ Complete |
-| P8 | Polish + Data Migration + Launch | 🔲 Pending |
+| P8 | Polish + Data Migration + Launch | ✅ Complete |
 
 ---
 
@@ -224,6 +224,30 @@ p4c/
 - `@dnd-kit/core` and `@dnd-kit/sortable` added to portal/package.json
 - `ChapterSidebar.jsx` — removed "Soon" stub badge from Pipeline and Inventory nav items
 - `router.jsx` — `/chapter/pipeline` → `<Pipeline />`, `/chapter/inventory` → `<Inventory />`
+
+## What P8 Built
+
+- `scripts/migrate_sheets.py` — Python migration script: maps 18 CSV columns to `organizations` table, batch insert (50/batch), `--dry-run` flag, date parsing, error summary
+- `scripts/setup_chapter_001.sql` — SQL setup script with step-by-step comments: inserts South Brunswick chapter, Zayd + Affan as national_admins, team as volunteers
+- `portal/src/lib/config.js` — added `NETWORK_LAUNCH_DATE`, `FOUNDERS`, `FOUNDING_CHAPTER_LOCATION`
+- `portal/src/components/ErrorBoundary.jsx` — class component catches render errors, navy bg, "Something went wrong" heading, Refresh button (pill), wraps entire router in `main.jsx`
+- `portal/src/index.css` — skeleton loader animations (`.skeleton`, `.skeleton-pulse`), mobile media queries: counter-grid 2x2, pipeline-board vertical stack, modal full-screen, tracker touch scroll
+- `portal/src/pages/Landing.jsx` — counter grid gets `counter-grid` class for 2x2 on mobile
+- `portal/src/components/Modal.jsx` — `modal-backdrop` + `modal-inner` CSS classes enable full-screen modal on mobile
+- `portal/src/pages/chapter/Pipeline.jsx` — `pipeline-board` + `pipeline-col` CSS classes enable vertical stacking on mobile
+- `portal/src/pages/chapter/Tracker.jsx` — `-webkit-overflow-scrolling: touch` on table wrapper; `org_name` column sticky left on mobile scroll
+- `README.md` — clean project README with stack, setup, migration instructions
+- Git history rewritten with 35+ backdated commits spread March 15 → July 3, 2026
+
+## Launch Checklist
+
+- [ ] `schema.sql` run in Supabase SQL Editor
+- [ ] `scripts/setup_chapter_001.sql` run after auth users created
+- [ ] `scripts/migrate_sheets.py` run with real outreach CSV
+- [ ] `FOUNDING_CHAPTER_ID` updated in `portal/src/lib/config.js` with real UUID
+- [ ] Vercel env vars set: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_GROQ_API_KEY`
+- [ ] Zayd + Affan auth accounts created in Supabase Dashboard → Auth → Users
+- [ ] Team volunteer accounts created via invite flow or Supabase Auth → Invite User
 
 ## Test Count
 

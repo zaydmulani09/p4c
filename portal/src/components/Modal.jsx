@@ -1,6 +1,7 @@
 export default function Modal({ title, onClose, children, maxWidth = '520px' }) {
   return (
     <div
+      className="modal-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
@@ -15,6 +16,7 @@ export default function Modal({ title, onClose, children, maxWidth = '520px' }) 
       onClick={onClose}
     >
       <div
+        className="modal-inner"
         style={{
           background: '#0d233e',
           border: '1px solid rgba(255,255,255,0.1)',

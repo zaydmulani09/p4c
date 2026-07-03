@@ -399,6 +399,43 @@ textarea.p4c-input { resize: vertical; min-height: 120px; }
   background: rgba(157, 23, 77, 0.06);
 }
 
+/* ── Skeleton loaders ─────────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: #122847;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.06) 40%,
+    transparent 100%
+  );
+  background-size: 400px 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+.skeleton-row {
+  height: 38px;
+  margin-bottom: 2px;
+}
+
+.skeleton-text {
+  height: 14px;
+  border-radius: 4px;
+}
+
 /* ── Mobile ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .navbar { padding: 1.5rem; }
@@ -407,4 +444,46 @@ textarea.p4c-input { resize: vertical; min-height: 120px; }
   .nav-overlay { padding: 2rem 1.5rem; width: 100vw; min-width: unset; }
   .overlay-menu { padding-left: 1rem; }
   .overlay-menu a { font-size: 2rem; }
+
+  /* Landing counter: 4 → 2x2 grid */
+  .counter-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .counter-grid .stat-card {
+    padding: 1.25rem 1rem;
+  }
+  .counter-grid .stat-num {
+    font-size: 2.2rem;
+  }
+
+  /* Pipeline board: horizontal scroll → vertical stack */
+  .pipeline-board {
+    flex-direction: column !important;
+    overflow-x: visible !important;
+    overflow-y: auto;
+  }
+  .pipeline-col {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: unset !important;
+  }
+
+  /* Modal: full screen */
+  .modal-inner {
+    border-radius: 0 !important;
+    max-width: 100vw !important;
+    max-height: 100dvh !important;
+    width: 100vw !important;
+    min-height: 100dvh !important;
+    padding: 1.5rem !important;
+  }
+  .modal-backdrop {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+
+  /* Apply form: full width */
+  .apply-grid {
+    grid-template-columns: 1fr !important;
+  }
 }

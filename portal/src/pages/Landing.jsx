@@ -208,7 +208,7 @@ export default function Landing() {
 
           {/* Live stats counter */}
           <div
-            className="fade-up-2"
+            className="fade-up-2 counter-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',

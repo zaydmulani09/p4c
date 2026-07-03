@@ -226,7 +226,7 @@ export default function Apply() {
             <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.3rem' }}>
 
               {/* Name + Email */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="apply-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label className="p4c-label">Full Name</label>
                   <input
@@ -265,7 +265,7 @@ export default function Apply() {
               </div>
 
               {/* City + State */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+              <div className="apply-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
                 <div>
                   <label className="p4c-label">City</label>
                   <input

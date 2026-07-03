@@ -139,7 +139,7 @@ function KanbanColumn({ status, orgs, onCardClick, collapsed, onToggleCollapse }
     : 'rgba(255,255,255,0.06)'
 
   return (
-    <div style={{
+    <div className="pipeline-col" style={{
       minWidth: '240px',
       maxWidth: '240px',
       display: 'flex',
@@ -461,7 +461,7 @@ export default function Pipeline() {
 
       {/* Board */}
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div style={{
+        <div className="pipeline-board" style={{
           display: 'flex', gap: '0.75rem',
           overflowX: 'auto', overflowY: 'visible',
           paddingBottom: '1.5rem',
