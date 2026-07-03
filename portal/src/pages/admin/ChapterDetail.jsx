@@ -144,8 +144,8 @@ function TrackerTab({ chapterId }) {
   const [page,    setPage]    = useState(0)
   const [search,  setSearch]  = useState('')
   const [status,  setStatus]  = useState('')
-  const [sortCol, setSortCol] = useState('created_at')
-  const [sortDir, setSortDir] = useState('desc')
+  const [sortCol, setSortCol] = useState('row_number')
+  const [sortDir, setSortDir] = useState('asc')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -153,7 +153,7 @@ function TrackerTab({ chapterId }) {
       .from('organizations')
       .select('*', { count: 'exact' })
       .eq('chapter_id', chapterId)
-      .order(sortCol, { ascending: sortDir === 'asc' })
+      .order(sortCol, { ascending: sortDir === 'asc', nullsFirst: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
     if (search) q = q.or(`org_name.ilike.%${search}%,contact_name.ilike.%${search}%,email.ilike.%${search}%`)
     if (status) q = q.eq('current_status', status)
@@ -271,8 +271,8 @@ function InventoryTab({ chapterId }) {
   const [loading, setLoading] = useState(true)
   const [page,    setPage]    = useState(0)
   const [search,  setSearch]  = useState('')
-  const [sortCol, setSortCol] = useState('created_at')
-  const [sortDir, setSortDir] = useState('desc')
+  const [sortCol, setSortCol] = useState('row_number')
+  const [sortDir, setSortDir] = useState('asc')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -280,7 +280,7 @@ function InventoryTab({ chapterId }) {
       .from('books')
       .select('*', { count: 'exact' })
       .eq('chapter_id', chapterId)
-      .order(sortCol, { ascending: sortDir === 'asc' })
+      .order(sortCol, { ascending: sortDir === 'asc', nullsFirst: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
     if (search) q = q.or(`title.ilike.%${search}%,author.ilike.%${search}%`)
     const { data, count: total } = await q

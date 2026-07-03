@@ -32,7 +32,7 @@ export function useOrganizations(filters = {}, page = 0) {
       .from('organizations')
       .select('*', { count: 'exact' })
       .eq('chapter_id', chapterId)
-      .order(sortCol, { ascending: sortDir === 'asc' })
+      .order(sortCol, { ascending: sortDir === 'asc', nullsFirst: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
 
     if (search) {
