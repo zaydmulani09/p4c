@@ -21,6 +21,7 @@ import AdminApplications   from './admin/Applications.jsx'
 import AdminResources      from './admin/Resources.jsx'
 import AdminImpact         from './admin/Impact.jsx'
 import Certificates        from './admin/Certificates.jsx'
+import InviteUser         from './admin/InviteUser.jsx'
 import ChapterImpact       from './chapter/Impact.jsx'
 
 export const router = createBrowserRouter(
@@ -47,6 +48,7 @@ export const router = createBrowserRouter(
         { path: 'resources',        element: <AdminResources /> },
         { path: 'impact',           element: <AdminImpact /> },
         { path: 'certificates',     element: <Certificates /> },
+        { path: 'invite',           element: <InviteUser /> },
       ],
     },
 

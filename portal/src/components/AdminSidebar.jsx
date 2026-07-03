@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: '/admin/resources',       label: 'Resource Library',   end: false, stub: false },
   { to: '/admin/impact',          label: 'Impact Reports',     end: false, stub: false },
   { to: '/admin/certificates',    label: 'Certificates',       end: false, stub: false },
+  { to: '/admin/invite',          label: 'Invite User',        end: false, stub: false },
 ]
 
 function ChapterJumper({ currentChapterId, onClose }) {
