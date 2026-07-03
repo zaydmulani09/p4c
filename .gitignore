@@ -16,3 +16,7 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# Internal docs
+P4C_MASTER.md
+CONTEXT.md
