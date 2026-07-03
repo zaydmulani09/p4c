@@ -176,10 +176,7 @@ CREATE POLICY "chapters_admin_all" ON chapters FOR ALL TO authenticated
 
 -- ── users ────────────────────────────────────────────────────
 CREATE POLICY "users_select_own" ON users FOR SELECT TO authenticated
-  USING (
-    id = auth.uid()
-    OR get_user_role() = 'national_admin'
-  );
+  USING (auth.uid() = id);
 
 CREATE POLICY "users_update_own" ON users FOR UPDATE TO authenticated
   USING (id = auth.uid())
