@@ -189,6 +189,7 @@ export default function AdminImpact() {
     setErr('')
     try {
       const text = await generateImpactReport(impactData, range.label, 'national')
+      console.log('GROQ RAW:', JSON.stringify(text))
       if (!text || text === 'Summary unavailable — check back later') {
         setReportText(buildFallbackReport(impactData, range.label))
       } else {
