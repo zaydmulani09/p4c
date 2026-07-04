@@ -1,6 +1,17 @@
 {
   "buildCommand": "cd portal && npm ci && npm run build",
   "outputDirectory": ".",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; connect-src 'self' https://api.groq.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/portal/assets/:file*",
