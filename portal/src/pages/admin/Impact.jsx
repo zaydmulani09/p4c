@@ -167,12 +167,39 @@ export default function AdminImpact() {
     }
   }
 
+  function buildFallbackReport(data, periodLabel) {
+    return [
+      'OUTREACH SUMMARY',
+      `During ${periodLabel}, the Pages for Change network engaged ${data.totalOrgs} organization${data.totalOrgs !== 1 ? 's' : ''} across ${data.totalChapters} active chapter${data.totalChapters !== 1 ? 's' : ''}. The network's outreach reflects an ongoing effort to expand literacy access in communities nationwide.`,
+      '',
+      'PARTNERSHIP HIGHLIGHTS',
+      `A total of ${data.totalPartnerships} partnership${data.totalPartnerships !== 1 ? 's' : ''} were established during this period. ${data.statusBreakdown !== 'None' ? `Organization status breakdown: ${data.statusBreakdown}.` : 'Outreach efforts continue to build the foundation for future partnerships.'}`,
+      '',
+      'BOOK DISTRIBUTION',
+      `${data.totalBooksDistributed} book${data.totalBooksDistributed !== 1 ? 's' : ''} were distributed across ${data.totalDistributions} distribution${data.totalDistributions !== 1 ? 's' : ''} during this period.${data.topChapter !== 'N/A' ? ` The top performing chapter was ${data.topChapter} with ${data.topChapterBooks} books distributed.` : ''}`,
+      '',
+      'LOOKING AHEAD',
+      `The Pages for Change network remains committed to expanding access to books and literacy resources across ${data.states !== 'N/A' ? data.states : 'all active states'}.`,
+    ].join('\n')
+  }
+
   async function handleGenerate() {
     if (!impactData || !range) return
     setGenerating(true)
-    const text = await generateImpactReport(impactData, range.label, 'national')
-    setReportText(text)
-    setGenerating(false)
+    setErr('')
+    try {
+      const text = await generateImpactReport(impactData, range.label, 'national')
+      if (!text || text.toLowerCase().includes('unavailable')) {
+        setReportText(buildFallbackReport(impactData, range.label))
+      } else {
+        setReportText(text)
+      }
+    } catch (e) {
+      console.error('[Impact] generateImpactReport failed:', e)
+      setReportText(buildFallbackReport(impactData, range.label))
+    } finally {
+      setGenerating(false)
+    }
   }
 
   function buildFullReport() {
