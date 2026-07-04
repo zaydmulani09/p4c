@@ -5,13 +5,13 @@ import { useNetworkStats } from '../../hooks/useNetworkStats.js'
 async function fetchNetworkSummary(stats) {
   const weekNum  = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000))
   const cacheKey = `p4c_network_summary_w${weekNum}`
-  const cached   = localStorage.getItem(cacheKey)
-  if (cached) {
-    try {
+  try {
+    const cached = localStorage.getItem(cacheKey)
+    if (cached) {
       const { text, ts } = JSON.parse(cached)
       if (text && !text.toLowerCase().includes('unavailable') && Date.now() - ts < 7 * 24 * 60 * 60 * 1000) return text
-    } catch {}
-  }
+    }
+  } catch {}
 
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
   console.log('[Dashboard] groq key present:', !!apiKey)
@@ -46,7 +46,7 @@ async function fetchNetworkSummary(stats) {
       text = text.replace(/<think>[\s\S]*?<\/think>/g, '')
       text = text.replace(/<think>[\s\S]*/g, '').trim()
     }
-    if (text) localStorage.setItem(cacheKey, JSON.stringify({ text, ts: Date.now() }))
+    try { if (text) localStorage.setItem(cacheKey, JSON.stringify({ text, ts: Date.now() })) } catch {}
     return text
   } catch (e) {
     console.error('[Dashboard] groq fetch failed:', e)
