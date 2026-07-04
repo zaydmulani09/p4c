@@ -16,37 +16,12 @@ const CONDITIONS       = ['New', 'Like New', 'Good', 'Acceptable', 'Poor']
 
 // ── AI Summary ────────────────────────────────────────────────
 async function fetchAISummary(stats, chapterId) {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY
-  if (!apiKey) return null
-
   try {
-    const isEarlyStage = !stats.orgs && !stats.books && !stats.distributions
-    const systemContent = 'You are the communications director for Pages for Change, a student-led national literacy nonprofit. Write a concise, professional weekly summary for a chapter lead. Tone: warm, mission-driven, and encouraging. Format: 3-4 sentences of flowing prose, no bullet points, no headers. Be specific with the numbers provided. Sound like a real nonprofit update, not a generic AI summary.'
-    const userContent = isEarlyStage
-      ? 'This chapter is just getting started with Pages for Change. Write an encouraging message about the exciting opportunity ahead to connect with organizations, collect books, and make a difference in the community.'
-      : `This week: ${stats.orgs} new organizations logged, ${stats.books} books received, ${stats.distributions} distributions made, ${stats.activeConversations} active conversations ongoing.`
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'qwen/qwen3.6-27b',
-        messages: [
-          { role: 'system', content: systemContent },
-          { role: 'user', content: userContent },
-        ],
-        max_tokens: 1024,
-      }),
+    const { data, error } = await supabase.functions.invoke('groq-summary', {
+      body: { type: 'chapter', stats },
     })
-    const data = await res.json()
-    let text = data.choices?.[0]?.message?.content ?? null
-    if (text) {
-      text = text.replace(/<think>[\s\S]*?<\/think>/g, '')
-      text = text.replace(/<think>[\s\S]*/g, '').trim()
-    }
-    return text
+    if (error || !data?.summary) return null
+    return data.summary
   } catch {
     return null
   }

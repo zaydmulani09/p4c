@@ -1,44 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useNetworkStats } from '../../hooks/useNetworkStats.js'
+import { supabase } from '../../lib/supabase.js'
 
 // ── AI Network Summary ─────────────────────────────────────────
 async function fetchNetworkSummary(stats) {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY
-  console.log('[Dashboard] groq key present:', !!apiKey)
-  if (!apiKey) return null
-
   try {
-    const isEarlyStage = !stats.totalBooksDistributed && !stats.totalOrgsContacted
-    const systemContent = 'You are the communications director for Pages for Change, a student-led national literacy nonprofit. Write a concise, professional weekly network summary for the national leadership team. Tone: warm, mission-driven, and encouraging. Format: 3-4 sentences of flowing prose, no bullet points, no headers. Be specific with the numbers provided. Sound like a real nonprofit update, not a generic AI summary.'
-    const userContent = isEarlyStage
-      ? 'Pages for Change is a new student-led literacy nonprofit just getting started. Write an encouraging message about the exciting opportunity ahead to build a book distribution network and make a lasting impact in communities.'
-      : `Network stats: ${stats.totalChapters} active chapters, ${stats.totalBooksDistributed} books in inventory, ${stats.totalOrgsContacted} organizations contacted network-wide, ${stats.totalPartnerships} established partnerships.`
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'qwen/qwen3.6-27b',
-        messages: [
-          { role: 'system', content: systemContent },
-          { role: 'user', content: userContent },
-        ],
-        max_tokens: 1024,
-      }),
+    const { data, error } = await supabase.functions.invoke('groq-summary', {
+      body: { type: 'national', stats },
     })
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}))
-      console.error('[Dashboard] groq error:', res.status, errData)
-      return null
-    }
-    const data = await res.json()
-    let text = data.choices?.[0]?.message?.content ?? null
-    if (text) {
-      text = text.replace(/<think>[\s\S]*?<\/think>/g, '')
-      text = text.replace(/<think>[\s\S]*/g, '').trim()
-    }
-    return text
-  } catch (e) {
-    console.error('[Dashboard] fetch threw:', e)
+    if (error || !data?.summary) return null
+    return data.summary
+  } catch {
     return null
   }
 }
