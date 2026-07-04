@@ -2,8 +2,6 @@ const GROQ_API = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL    = 'llama3-70b-8192'
 const FALLBACK = 'Summary unavailable — check back later'
 
-console.log('GROQ KEY:', import.meta.env.VITE_GROQ_API_KEY)
-
 function getCached(key) {
   try {
     const raw = localStorage.getItem(key)
@@ -22,12 +20,17 @@ function setCached(key, text) {
 async function callGroq(messages, maxTokens = 400) {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
   if (!apiKey) return FALLBACK
+  console.log('[Groq] model:', MODEL)
   const res = await fetch(GROQ_API, {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: MODEL, messages, max_tokens: maxTokens }),
   })
   const data = await res.json()
+  if (!res.ok) {
+    console.error('[Groq] error response:', res.status, data)
+    return FALLBACK
+  }
   return data.choices?.[0]?.message?.content ?? FALLBACK
 }
 
