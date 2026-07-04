@@ -29,9 +29,7 @@ async function fetchAISummary(stats, chapterId) {
 
   try {
     const isEarlyStage = !stats.orgs && !stats.books && !stats.distributions
-    const systemContent = isEarlyStage
-      ? 'You are a helpful assistant for Pages for Change, a student-led literacy nonprofit. Write a brief, encouraging message for a chapter lead just getting started. Keep it under 4 sentences. Do not use bullet points.'
-      : 'You are a helpful assistant for Pages for Change, a student-led literacy nonprofit. Write a brief, encouraging weekly summary for a chapter lead based on their activity data. Be specific with the numbers. Keep it under 4 sentences. Do not use bullet points.'
+    const systemContent = 'You are the communications director for Pages for Change, a student-led national literacy nonprofit. Write a concise, professional weekly summary for a chapter lead. Tone: warm, mission-driven, and encouraging. Format: 3-4 sentences of flowing prose, no bullet points, no headers. Be specific with the numbers provided. Sound like a real nonprofit update, not a generic AI summary.'
     const userContent = isEarlyStage
       ? 'This chapter is just getting started with Pages for Change. Write an encouraging message about the exciting opportunity ahead to connect with organizations, collect books, and make a difference in the community.'
       : `This week: ${stats.orgs} new organizations logged, ${stats.books} books received, ${stats.distributions} distributions made, ${stats.activeConversations} active conversations ongoing.`
@@ -51,7 +49,8 @@ async function fetchAISummary(stats, chapterId) {
       }),
     })
     const data = await res.json()
-    const text = data.choices?.[0]?.message?.content ?? null
+    let text = data.choices?.[0]?.message?.content ?? null
+    if (text) text = text.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
     if (text) localStorage.setItem(cacheKey, JSON.stringify({ text, ts: Date.now() }))
     return text
   } catch {

@@ -31,7 +31,9 @@ async function callGroq(messages, maxTokens = 400) {
     return FALLBACK
   }
   const data = await res.json()
-  return data.choices?.[0]?.message?.content ?? FALLBACK
+  let text = data.choices?.[0]?.message?.content ?? FALLBACK
+  text = text.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+  return text
 }
 
 export async function generateWeeklySummary(stats, scope) {
@@ -51,11 +53,11 @@ export async function generateWeeklySummary(stats, scope) {
       : `This week: ${stats.orgs} new organizations logged, ${stats.books} books received, ${stats.distributions} distributions made, ${stats.activeConversations} active conversations ongoing.`
 
   try {
+    const systemPrompt = scope === 'national'
+      ? 'You are the communications director for Pages for Change, a student-led national literacy nonprofit. Write a concise, professional weekly network summary for the national leadership team. Tone: warm, mission-driven, and encouraging. Format: 3-4 sentences of flowing prose, no bullet points, no headers. Be specific with the numbers provided. Sound like a real nonprofit update, not a generic AI summary.'
+      : 'You are the communications director for Pages for Change, a student-led national literacy nonprofit. Write a concise, professional weekly summary for a chapter lead. Tone: warm, mission-driven, and encouraging. Format: 3-4 sentences of flowing prose, no bullet points, no headers. Be specific with the numbers provided. Sound like a real nonprofit update, not a generic AI summary.'
     const text = await callGroq([
-      {
-        role: 'system',
-        content: 'You are a helpful assistant for Pages for Change, a student-led literacy nonprofit. Write a brief, encouraging weekly summary. Be specific with numbers. Under 4 sentences. No bullet points.',
-      },
+      { role: 'system', content: systemPrompt },
       { role: 'user', content },
     ], 200)
     setCached(key, text)
