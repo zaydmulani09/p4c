@@ -41,7 +41,9 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    const { type, stats } = await req.json()
+    const body = await req.json()
+    console.log('[groq-summary] request body:', JSON.stringify(body))
+    const { type, stats } = body
     if (!type || !stats) {
       return new Response(JSON.stringify({ error: 'type and stats are required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -77,19 +79,21 @@ Deno.serve(async (req: Request) => {
           { role: 'system', content: systemContent },
           { role: 'user', content: userContent },
         ],
-        max_tokens: 1024,
+        max_tokens: 2048,
       }),
     })
 
+    console.log('[groq-summary] groq status:', groqRes.status)
+    const groqData = await groqRes.json()
+    console.log('[groq-summary] groq body:', JSON.stringify(groqData))
+
     if (!groqRes.ok) {
-      const errData = await groqRes.json().catch(() => ({}))
-      console.error('[groq-summary] groq error:', groqRes.status, errData)
+      console.error('[groq-summary] groq error:', groqRes.status, groqData)
       return new Response(JSON.stringify({ error: 'Groq API error' }), {
         status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const groqData = await groqRes.json()
     let summary = groqData.choices?.[0]?.message?.content ?? ''
     summary = stripThink(summary)
 
