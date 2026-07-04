@@ -29,7 +29,7 @@ async function fetchNetworkSummary(stats) {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama3-70b-8192',
+        model: 'llama3-groq-70b-8192-tool-use-preview',
         messages: [
           { role: 'system', content: systemContent },
           { role: 'user', content: userContent },
