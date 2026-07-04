@@ -49,7 +49,7 @@ async function fetchNetworkSummary(stats) {
     try { if (text) localStorage.setItem(cacheKey, JSON.stringify({ text, ts: Date.now() })) } catch {}
     return text
   } catch (e) {
-    console.error('[Dashboard] groq fetch failed:', e)
+    console.error('[Dashboard] fetch threw:', e)
     return null
   }
 }
