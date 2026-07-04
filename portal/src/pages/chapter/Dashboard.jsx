@@ -16,16 +16,6 @@ const CONDITIONS       = ['New', 'Like New', 'Good', 'Acceptable', 'Poor']
 
 // ── AI Summary ────────────────────────────────────────────────
 async function fetchAISummary(stats, chapterId) {
-  const weekNum = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000))
-  const cacheKey = `p4c_summary_${chapterId}_w${weekNum}`
-  try {
-    const cached = localStorage.getItem(cacheKey)
-    if (cached) {
-      const { text, ts } = JSON.parse(cached)
-      if (Date.now() - ts < 7 * 24 * 60 * 60 * 1000) return text
-    }
-  } catch {}
-
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
   if (!apiKey) return null
 
@@ -56,7 +46,6 @@ async function fetchAISummary(stats, chapterId) {
       text = text.replace(/<think>[\s\S]*?<\/think>/g, '')
       text = text.replace(/<think>[\s\S]*/g, '').trim()
     }
-    try { if (text) localStorage.setItem(cacheKey, JSON.stringify({ text, ts: Date.now() })) } catch {}
     return text
   } catch {
     return null
