@@ -1,5 +1,5 @@
 const GROQ_API = 'https://api.groq.com/openai/v1/chat/completions'
-const MODEL    = 'llama3-groq-70b-8192-tool-use-preview'
+const MODEL    = 'llama-3.3-70b-versatile'
 const FALLBACK = 'Summary unavailable — check back later'
 
 function getCached(key) {
