@@ -17,20 +17,21 @@ async function fetchNetworkSummary(stats) {
   if (!apiKey) return null
 
   try {
+    const isEarlyStage = !stats.totalBooksDistributed && !stats.totalOrgsContacted
+    const systemContent = isEarlyStage
+      ? 'You are a helpful assistant for Pages for Change, a student-led literacy nonprofit network. Write a brief, encouraging message for the national leadership team. Under 4 sentences. No bullet points.'
+      : 'You are a helpful assistant for Pages for Change, a student-led literacy nonprofit network. Write a brief encouraging weekly summary for the national leadership team based on network-wide activity. Be specific with numbers. Under 4 sentences. No bullet points.'
+    const userContent = isEarlyStage
+      ? 'Pages for Change is a new student-led literacy nonprofit just getting started. Write an encouraging message about the exciting opportunity ahead to build a book distribution network and make a lasting impact in communities.'
+      : `Network stats: ${stats.totalChapters} active chapters, ${stats.totalBooksDistributed} books in inventory, ${stats.totalOrgsContacted} organizations contacted network-wide, ${stats.totalPartnerships} established partnerships.`
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'llama3-70b-8192',
         messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant for Pages for Change, a student-led literacy nonprofit network. Write a brief encouraging weekly summary for the national leadership team based on network-wide activity. Be specific with numbers. Under 4 sentences. No bullet points.',
-          },
-          {
-            role: 'user',
-            content: `Network stats: ${stats.totalChapters} active chapters, ${stats.totalBooksDistributed} books in inventory, ${stats.totalOrgsContacted} organizations contacted network-wide, ${stats.totalPartnerships} established partnerships.`,
-          },
+          { role: 'system', content: systemContent },
+          { role: 'user', content: userContent },
         ],
         max_tokens: 200,
       }),

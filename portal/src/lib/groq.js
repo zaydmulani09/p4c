@@ -2,7 +2,7 @@ const GROQ_API = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL    = 'llama3-70b-8192'
 const FALLBACK = 'Summary unavailable — check back later'
 
-console.log('Groq key present:', !!import.meta.env.VITE_GROQ_API_KEY)
+console.log('GROQ KEY:', import.meta.env.VITE_GROQ_API_KEY)
 
 function getCached(key) {
   try {
@@ -37,9 +37,15 @@ export async function generateWeeklySummary(stats, scope) {
   const cached = getCached(key)
   if (cached) return cached
 
-  const content = scope === 'national'
-    ? `Network stats: ${stats.totalChapters} active chapters, ${stats.totalBooksDistributed} books in inventory, ${stats.totalOrgsContacted} organizations contacted, ${stats.totalPartnerships} established partnerships.`
-    : `This week: ${stats.orgs} new organizations logged, ${stats.books} books received, ${stats.distributions} distributions made, ${stats.activeConversations} active conversations ongoing.`
+  const isZeroData = scope === 'national'
+    ? !stats.totalBooksDistributed && !stats.totalOrgsContacted
+    : !stats.orgs && !stats.books && !stats.distributions
+
+  const content = isZeroData
+    ? `Pages for Change is a new student-led literacy nonprofit just getting started. Write a brief, encouraging message (under 4 sentences, no bullet points) for the ${scope === 'national' ? 'national leadership team' : 'chapter lead'} about the exciting opportunity ahead to build a book distribution network and make a lasting impact in their community.`
+    : scope === 'national'
+      ? `Network stats: ${stats.totalChapters} active chapters, ${stats.totalBooksDistributed} books in inventory, ${stats.totalOrgsContacted} organizations contacted, ${stats.totalPartnerships} established partnerships.`
+      : `This week: ${stats.orgs} new organizations logged, ${stats.books} books received, ${stats.distributions} distributions made, ${stats.activeConversations} active conversations ongoing.`
 
   try {
     const text = await callGroq([

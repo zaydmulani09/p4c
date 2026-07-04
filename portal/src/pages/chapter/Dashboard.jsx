@@ -28,6 +28,13 @@ async function fetchAISummary(stats, chapterId) {
   if (!apiKey) return null
 
   try {
+    const isEarlyStage = !stats.orgs && !stats.books && !stats.distributions
+    const systemContent = isEarlyStage
+      ? 'You are a helpful assistant for Pages for Change, a student-led literacy nonprofit. Write a brief, encouraging message for a chapter lead just getting started. Keep it under 4 sentences. Do not use bullet points.'
+      : 'You are a helpful assistant for Pages for Change, a student-led literacy nonprofit. Write a brief, encouraging weekly summary for a chapter lead based on their activity data. Be specific with the numbers. Keep it under 4 sentences. Do not use bullet points.'
+    const userContent = isEarlyStage
+      ? 'This chapter is just getting started with Pages for Change. Write an encouraging message about the exciting opportunity ahead to connect with organizations, collect books, and make a difference in the community.'
+      : `This week: ${stats.orgs} new organizations logged, ${stats.books} books received, ${stats.distributions} distributions made, ${stats.activeConversations} active conversations ongoing.`
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -37,15 +44,8 @@ async function fetchAISummary(stats, chapterId) {
       body: JSON.stringify({
         model: 'llama3-70b-8192',
         messages: [
-          {
-            role: 'system',
-            content:
-              'You are a helpful assistant for Pages for Change, a student-led literacy nonprofit. Write a brief, encouraging weekly summary for a chapter lead based on their activity data. Be specific with the numbers. Keep it under 4 sentences. Do not use bullet points.',
-          },
-          {
-            role: 'user',
-            content: `This week: ${stats.orgs} new organizations logged, ${stats.books} books received, ${stats.distributions} distributions made, ${stats.activeConversations} active conversations ongoing.`,
-          },
+          { role: 'system', content: systemContent },
+          { role: 'user', content: userContent },
         ],
         max_tokens: 200,
       }),
