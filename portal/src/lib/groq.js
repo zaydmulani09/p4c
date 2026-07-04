@@ -20,17 +20,17 @@ function setCached(key, text) {
 async function callGroq(messages, maxTokens = 400) {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
   if (!apiKey) return FALLBACK
-  console.log('[Groq] model:', MODEL)
   const res = await fetch(GROQ_API, {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: MODEL, messages, max_tokens: maxTokens }),
   })
-  const data = await res.json()
   if (!res.ok) {
-    console.error('[Groq] error response:', res.status, data)
+    const errData = await res.json().catch(() => ({}))
+    console.error('[Groq] error response:', res.status, MODEL, errData)
     return FALLBACK
   }
+  const data = await res.json()
   return data.choices?.[0]?.message?.content ?? FALLBACK
 }
 

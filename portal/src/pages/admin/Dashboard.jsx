@@ -14,6 +14,7 @@ async function fetchNetworkSummary(stats) {
   }
 
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
+  console.log('[Dashboard] groq key present:', !!apiKey)
   if (!apiKey) return null
 
   try {
@@ -36,11 +37,17 @@ async function fetchNetworkSummary(stats) {
         max_tokens: 200,
       }),
     })
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      console.error('[Dashboard] groq error:', res.status, errData)
+      return null
+    }
     const data = await res.json()
     const text = data.choices?.[0]?.message?.content ?? null
     if (text) localStorage.setItem(cacheKey, JSON.stringify({ text, ts: Date.now() }))
     return text
-  } catch {
+  } catch (e) {
+    console.error('[Dashboard] groq fetch failed:', e)
     return null
   }
 }
