@@ -32,7 +32,8 @@ async function callGroq(messages, maxTokens = 400) {
   }
   const data = await res.json()
   let text = data.choices?.[0]?.message?.content ?? FALLBACK
-  text = text.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+  text = text.replace(/<think>[\s\S]*?<\/think>/g, '')
+  text = text.replace(/<think>[\s\S]*/g, '').trim()
   return text
 }
 
@@ -59,7 +60,7 @@ export async function generateWeeklySummary(stats, scope) {
     const text = await callGroq([
       { role: 'system', content: systemPrompt },
       { role: 'user', content },
-    ], 200)
+    ], 1024)
     setCached(key, text)
     return text
   } catch (e) {

@@ -45,12 +45,15 @@ async function fetchAISummary(stats, chapterId) {
           { role: 'system', content: systemContent },
           { role: 'user', content: userContent },
         ],
-        max_tokens: 200,
+        max_tokens: 1024,
       }),
     })
     const data = await res.json()
     let text = data.choices?.[0]?.message?.content ?? null
-    if (text) text = text.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+    if (text) {
+      text = text.replace(/<think>[\s\S]*?<\/think>/g, '')
+      text = text.replace(/<think>[\s\S]*/g, '').trim()
+    }
     if (text) localStorage.setItem(cacheKey, JSON.stringify({ text, ts: Date.now() }))
     return text
   } catch {
