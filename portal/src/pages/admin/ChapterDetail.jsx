@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   DndContext, DragOverlay, PointerSensor,
@@ -6,6 +6,7 @@ import {
   useDroppable, useDraggable,
 } from '@dnd-kit/core'
 import { supabase } from '../../lib/supabase.js'
+import { useAuth } from '../../context/AuthContext.jsx'
 
 // ── Constants ─────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -20,34 +21,46 @@ const ALL_PIPELINE_STATUSES = [
 const COLLAPSED_BY_DEFAULT = new Set(['Not Interested', 'Closed'])
 const PAGE_SIZE = 50
 
+const ORG_TYPE_OPTIONS = ['Library', 'School', 'Community Center', 'Church/Religious', 'Hospital', 'Non-Profit', 'Business', 'Government', 'Other']
+const CONTACT_METHODS  = ['Email', 'Phone', 'In Person', 'Social Media', 'Mail', 'Other']
+const GENRE_OPTIONS    = ['Fiction', 'Nonfiction', 'Picture Book', 'Early Reader', 'Middle Grade', 'Young Adult', 'Reference', 'Educational', 'Other']
+const AGE_OPTIONS      = ['0-3', '4-6', '7-9', '10-12', '13+', 'All Ages']
+const CONDITION_OPTIONS = ['New', 'Good', 'Fair', 'Poor']
+
 const ORG_COLS = [
-  { key: 'org_name',             label: 'Organization',   w: 200 },
-  { key: 'org_type',             label: 'Type',           w: 135 },
-  { key: 'contact_name',         label: 'Contact',        w: 145 },
-  { key: 'email',                label: 'Email',          w: 190 },
-  { key: 'phone',                label: 'Phone',          w: 135 },
-  { key: 'township',             label: 'Township',       w: 135 },
-  { key: 'date_first_contacted', label: 'First Contacted',w: 145 },
-  { key: 'current_status',       label: 'Status',         w: 185 },
-  { key: 'follow_up_date',       label: 'Follow-Up',      w: 125 },
-  { key: 'partnership_interest', label: 'Interest',       w: 160 },
-  { key: 'notes',                label: 'Notes',          w: 200 },
-  { key: 'outcome',              label: 'Outcome',        w: 145 },
+  { key: 'org_name',             label: 'Organization',    type: 'text',   w: 200, editable: true  },
+  { key: 'org_type',             label: 'Type',            type: 'select', w: 135, editable: true,  options: ORG_TYPE_OPTIONS },
+  { key: 'contact_name',         label: 'Contact',         type: 'text',   w: 145, editable: true  },
+  { key: 'email',                label: 'Email',           type: 'email',  w: 190, editable: true  },
+  { key: 'phone',                label: 'Phone',           type: 'text',   w: 135, editable: true  },
+  { key: 'township',             label: 'Township',        type: 'text',   w: 135, editable: true  },
+  { key: 'date_first_contacted', label: 'First Contacted', type: 'date',   w: 145, editable: true  },
+  { key: 'current_status',       label: 'Status',          type: 'select', w: 185, editable: true,  options: STATUS_OPTIONS },
+  { key: 'follow_up_date',       label: 'Follow-Up',       type: 'date',   w: 125, editable: true  },
+  { key: 'partnership_interest', label: 'Interest',        type: 'text',   w: 160, editable: true  },
+  { key: 'notes',                label: 'Notes',           type: 'text',   w: 200, editable: true  },
+  { key: 'outcome',              label: 'Outcome',         type: 'text',   w: 145, editable: true  },
 ]
 const BOOK_COLS = [
-  { key: 'title',         label: 'Title',        w: 220 },
-  { key: 'author',        label: 'Author',       w: 165 },
-  { key: 'genre',         label: 'Genre',        w: 140 },
-  { key: 'age_range',     label: 'Age Range',    w: 110 },
-  { key: 'condition',     label: 'Condition',    w: 110 },
-  { key: 'quantity',      label: 'Qty',          w: 75  },
-  { key: 'date_received', label: 'Date Received',w: 140 },
+  { key: 'title',         label: 'Title',         type: 'text',   w: 220, editable: true },
+  { key: 'author',        label: 'Author',        type: 'text',   w: 165, editable: true },
+  { key: 'genre',         label: 'Genre',         type: 'select', w: 140, editable: true, options: GENRE_OPTIONS },
+  { key: 'age_range',     label: 'Age Range',     type: 'select', w: 110, editable: true, options: AGE_OPTIONS },
+  { key: 'condition',     label: 'Condition',     type: 'select', w: 110, editable: true, options: CONDITION_OPTIONS },
+  { key: 'quantity',      label: 'Qty',           type: 'number', w: 75,  editable: true },
+  { key: 'date_received', label: 'Date Received', type: 'date',   w: 140, editable: true },
 ]
 
 // ── Helpers ───────────────────────────────────────────────────
 function fmtDate(d) {
   if (!d) return '—'
   return d.slice(0, 10)
+}
+
+function fmt(val, type) {
+  if (val == null || val === '') return ''
+  if (type === 'date') return String(val).slice(0, 10)
+  return String(val)
 }
 
 function statusStyle(status) {
@@ -120,7 +133,7 @@ function TabBar({ active, onChange }) {
   )
 }
 
-// ── Read-only table helpers ───────────────────────────────────
+// ── Sortable column header ─────────────────────────────────────
 function SortTh({ col, sortCol, sortDir, onSort }) {
   const active = sortCol === col.key
   return (
@@ -141,16 +154,180 @@ function SortTh({ col, sortCol, sortDir, onSort }) {
   )
 }
 
+// ── Inline editable cell ──────────────────────────────────────
+function EditCell({ row, col, editCell, editValue, onStartEdit, onEditChange, onCommit, onCancel }) {
+  const isEditing = editCell?.rowId === row.id && editCell?.col === col.key
+  const inputRef  = useRef(null)
+
+  useEffect(() => {
+    if (isEditing) inputRef.current?.focus()
+  }, [isEditing])
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter')  { e.preventDefault(); onCommit() }
+    if (e.key === 'Escape') { e.preventDefault(); onCancel() }
+  }
+
+  const tdStyle = {
+    padding: 0, borderBottom: '1px solid rgba(255,255,255,0.06)',
+    width: col.w, minWidth: col.w, maxWidth: col.w, verticalAlign: 'middle',
+  }
+  const cellStyle = {
+    display: 'block', padding: '0.5rem 0.75rem',
+    fontFamily: 'var(--font-body)', fontSize: '0.825rem', color: 'rgba(255,255,255,0.8)',
+    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+    cursor: col.editable ? 'pointer' : 'default', minHeight: '36px', lineHeight: '1.4',
+  }
+  const inputStyle = {
+    width: '100%', padding: '0.45rem 0.75rem',
+    background: '#122847', border: '2px solid #F6AA3C', borderRadius: 0,
+    color: 'white', fontFamily: 'var(--font-body)', fontSize: '0.825rem', outline: 'none',
+  }
+
+  if (isEditing) {
+    if (col.type === 'select') {
+      return (
+        <td style={tdStyle}>
+          <select ref={inputRef} style={{ ...inputStyle, cursor: 'pointer' }} value={editValue}
+            onChange={e => onEditChange(e.target.value)} onBlur={onCommit} onKeyDown={handleKeyDown}>
+            <option value="">—</option>
+            {col.options.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </td>
+      )
+    }
+    return (
+      <td style={tdStyle}>
+        <input ref={inputRef}
+          type={col.type === 'email' ? 'email' : col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
+          min={col.type === 'number' ? 0 : undefined}
+          style={inputStyle} value={editValue}
+          onChange={e => onEditChange(e.target.value)} onBlur={onCommit} onKeyDown={handleKeyDown}
+        />
+      </td>
+    )
+  }
+
+  const val = row[col.key]
+
+  if (col.key === 'current_status' && val) {
+    const { bg, color } = statusStyle(val)
+    return (
+      <td style={tdStyle} onClick={() => col.editable && onStartEdit(row.id, col.key, val ?? '')}>
+        <div style={{ padding: '0.5rem 0.75rem' }}>
+          <span style={{ background: bg, color, padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{val}</span>
+        </div>
+      </td>
+    )
+  }
+
+  if (col.key === 'condition' && val) {
+    const { bg, color } = conditionStyle(val)
+    return (
+      <td style={tdStyle} onClick={() => col.editable && onStartEdit(row.id, col.key, val ?? '')}>
+        <div style={{ padding: '0.5rem 0.75rem' }}>
+          <span style={{ background: bg, color, padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>{val}</span>
+        </div>
+      </td>
+    )
+  }
+
+  return (
+    <td style={tdStyle} onClick={() => col.editable && onStartEdit(row.id, col.key, fmt(val, col.type))}>
+      <span style={cellStyle}>
+        {(col.key === 'date_first_contacted' || col.key === 'follow_up_date' || col.key === 'date_received')
+          ? fmtDate(val)
+          : (fmt(val, col.type) || <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>)}
+      </span>
+    </td>
+  )
+}
+
+// ── Add Org Panel ─────────────────────────────────────────────
+const EMPTY_ORG = {
+  org_name: '', org_type: '', website: '', contact_name: '', contact_title: '',
+  email: '', phone: '', township: '', current_status: 'Not Contacted',
+  follow_up_date: '', partnership_interest: '', notes: '', outcome: '',
+}
+
+function AddOrgPanel({ open, onClose, onAdd }) {
+  const [form,   setForm]   = useState(EMPTY_ORG)
+  const [saving, setSaving] = useState(false)
+  const [err,    setErr]    = useState('')
+
+  const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!form.org_name.trim()) { setErr('Organization name is required.'); return }
+    setSaving(true)
+    const payload = { ...form }
+    Object.keys(payload).forEach(k => { if (payload[k] === '') payload[k] = null })
+    payload.org_name = form.org_name.trim()
+    const { error } = await onAdd(payload)
+    if (error) { setErr(error.message); setSaving(false); return }
+    setForm(EMPTY_ORG); setErr(''); setSaving(false); onClose()
+  }
+
+  function lbl(text, req) {
+    return <label className="p4c-label" style={{ fontSize: '0.72rem' }}>{text}{req && <span style={{ color: '#F6AA3C' }}> *</span>}</label>
+  }
+
+  return (
+    <>
+      {open && <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 90 }} onClick={onClose} />}
+      <div style={{
+        position: 'fixed', top: 0, right: 0, height: '100vh', width: 'min(480px, 100vw)',
+        background: '#0d233e', borderLeft: '1px solid rgba(255,255,255,0.1)',
+        transform: open ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.35s cubic-bezier(0.77,0,0.175,1)',
+        zIndex: 100, overflowY: 'auto', display: 'flex', flexDirection: 'column',
+      }}>
+        <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.1rem', color: 'white' }}>Add Organization</h3>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }}>×</button>
+        </div>
+        <form onSubmit={handleSubmit} style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.85rem', flex: 1 }}>
+          <div>{lbl('Organization Name', true)}<input className="p4c-input" value={form.org_name} onChange={e => set('org_name', e.target.value)} placeholder="Org name" /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div>{lbl('Org Type')}<select className="p4c-input" value={form.org_type} onChange={e => set('org_type', e.target.value)} style={{ cursor: 'pointer' }}><option value="">Select…</option>{ORG_TYPE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
+            <div>{lbl('Status')}<select className="p4c-input" value={form.current_status} onChange={e => set('current_status', e.target.value)} style={{ cursor: 'pointer' }}>{STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+            <div>{lbl('Contact Name')}<input className="p4c-input" value={form.contact_name} onChange={e => set('contact_name', e.target.value)} /></div>
+            <div>{lbl('Position/Title')}<input className="p4c-input" value={form.contact_title} onChange={e => set('contact_title', e.target.value)} /></div>
+            <div>{lbl('Email')}<input className="p4c-input" type="email" value={form.email} onChange={e => set('email', e.target.value)} /></div>
+            <div>{lbl('Phone')}<input className="p4c-input" value={form.phone} onChange={e => set('phone', e.target.value)} /></div>
+            <div>{lbl('Township')}<input className="p4c-input" value={form.township} onChange={e => set('township', e.target.value)} /></div>
+            <div>{lbl('Follow-Up Date')}<input className="p4c-input" type="date" value={form.follow_up_date} onChange={e => set('follow_up_date', e.target.value)} /></div>
+          </div>
+          <div>{lbl('Website')}<input className="p4c-input" value={form.website} onChange={e => set('website', e.target.value)} placeholder="https://…" /></div>
+          <div>{lbl('Partnership Interest')}<input className="p4c-input" value={form.partnership_interest} onChange={e => set('partnership_interest', e.target.value)} /></div>
+          <div>{lbl('Notes')}<textarea className="p4c-input" value={form.notes} onChange={e => set('notes', e.target.value)} style={{ minHeight: '70px' }} /></div>
+          <div>{lbl('Outcome')}<input className="p4c-input" value={form.outcome} onChange={e => set('outcome', e.target.value)} /></div>
+          {err && <p style={{ color: '#fca5a5', fontSize: '0.82rem' }}>{err}</p>}
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: 'auto', paddingTop: '0.5rem' }}>
+            <button type="button" className="pill-button secondary" style={{ flex: 1, fontSize: '0.85rem' }} onClick={onClose}>Cancel</button>
+            <button type="submit" className="pill-button orange" style={{ flex: 2, fontSize: '0.85rem' }} disabled={saving}>{saving ? <span className="p4c-spinner-sm" /> : 'Save Organization'}</button>
+          </div>
+        </form>
+      </div>
+    </>
+  )
+}
+
 // ── Tracker Tab ───────────────────────────────────────────────
 function TrackerTab({ chapterId }) {
-  const [orgs,    setOrgs]    = useState([])
-  const [count,   setCount]   = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [page,    setPage]    = useState(0)
-  const [search,  setSearch]  = useState('')
-  const [status,  setStatus]  = useState('')
-  const [sortCol, setSortCol] = useState('row_number')
-  const [sortDir, setSortDir] = useState('asc')
+  const { user } = useAuth()
+  const [orgs,      setOrgs]      = useState([])
+  const [count,     setCount]     = useState(0)
+  const [loading,   setLoading]   = useState(true)
+  const [page,      setPage]      = useState(0)
+  const [search,    setSearch]    = useState('')
+  const [status,    setStatus]    = useState('')
+  const [sortCol,   setSortCol]   = useState('row_number')
+  const [sortDir,   setSortDir]   = useState('asc')
+  const [editCell,  setEditCell]  = useState(null)
+  const [editValue, setEditValue] = useState('')
+  const [panelOpen, setPanelOpen] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -174,6 +351,29 @@ function TrackerTab({ chapterId }) {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortCol(col); setSortDir('asc') }
     setPage(0)
+  }
+
+  function startEdit(rowId, col, value) { setEditCell({ rowId, col }); setEditValue(value ?? '') }
+
+  async function commitEdit() {
+    if (!editCell) return
+    const { rowId, col } = editCell
+    setEditCell(null)
+    const colDef = ORG_COLS.find(c => c.key === col)
+    const val = colDef?.type === 'number' ? (editValue === '' ? null : Number(editValue)) : (editValue || null)
+    const { data } = await supabase.from('organizations').update({ [col]: val }).eq('id', rowId).select().single()
+    if (data) setOrgs(prev => prev.map(o => o.id === rowId ? data : o))
+  }
+
+  function cancelEdit() { setEditCell(null); setEditValue('') }
+
+  async function addOrg(fields) {
+    const { data, error } = await supabase
+      .from('organizations')
+      .insert({ ...fields, chapter_id: chapterId, logged_by: user?.id })
+      .select().single()
+    if (!error && data) { setOrgs(prev => [data, ...prev]); setCount(prev => prev + 1) }
+    return { data, error }
   }
 
   return (
@@ -208,6 +408,13 @@ function TrackerTab({ chapterId }) {
         <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>
           {count} organizations
         </span>
+        <button
+          className="pill-button orange"
+          style={{ fontSize: '0.85rem', padding: '0.5rem 1.1rem', flexShrink: 0 }}
+          onClick={() => setPanelOpen(true)}
+        >
+          + Add Organization
+        </button>
       </div>
 
       <div style={{ overflowX: 'auto', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', background: '#122847' }}>
@@ -230,33 +437,14 @@ function TrackerTab({ chapterId }) {
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
                 >
-                  {ORG_COLS.map(col => {
-                    const val = org[col.key]
-                    const tdStyle = {
-                      padding: 0, borderBottom: '1px solid rgba(255,255,255,0.06)',
-                      width: col.w, minWidth: col.w, maxWidth: col.w, verticalAlign: 'middle',
-                    }
-                    const cellStyle = {
-                      display: 'block', padding: '0.5rem 0.75rem',
-                      fontFamily: 'var(--font-body)', fontSize: '0.825rem', color: 'rgba(255,255,255,0.8)',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }
-                    if (col.key === 'current_status' && val) {
-                      const { bg, color } = statusStyle(val)
-                      return (
-                        <td key={col.key} style={tdStyle}>
-                          <div style={{ padding: '0.5rem 0.75rem' }}>
-                            <span style={{ background: bg, color, padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{val}</span>
-                          </div>
-                        </td>
-                      )
-                    }
-                    return (
-                      <td key={col.key} style={tdStyle}>
-                        <span style={cellStyle}>{(col.key === 'date_first_contacted' || col.key === 'follow_up_date') ? fmtDate(val) : (val || <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>)}</span>
-                      </td>
-                    )
-                  })}
+                  {ORG_COLS.map(col => (
+                    <EditCell
+                      key={col.key} row={org} col={col}
+                      editCell={editCell} editValue={editValue}
+                      onStartEdit={startEdit} onEditChange={setEditValue}
+                      onCommit={commitEdit} onCancel={cancelEdit}
+                    />
+                  ))}
                 </tr>
               ))}
             </tbody>
@@ -264,20 +452,212 @@ function TrackerTab({ chapterId }) {
         )}
       </div>
       <Pagination page={page} totalPages={Math.max(1, Math.ceil(count / PAGE_SIZE))} onPage={setPage} />
+      <AddOrgPanel open={panelOpen} onClose={() => setPanelOpen(false)} onAdd={addOrg} />
+    </div>
+  )
+}
+
+// ── Log Books Panel ───────────────────────────────────────────
+const EMPTY_BOOK = { title: '', author: '', genre: '', age_range: '', condition: 'Good', quantity: 1, date_received: '' }
+
+function LogBooksPanel({ open, onClose, onAdd }) {
+  const [form,   setForm]   = useState(EMPTY_BOOK)
+  const [saving, setSaving] = useState(false)
+  const [err,    setErr]    = useState('')
+
+  const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!form.title.trim()) { setErr('Title is required.'); return }
+    if (!form.quantity || Number(form.quantity) < 1) { setErr('Quantity must be at least 1.'); return }
+    setSaving(true)
+    const payload = { ...form, quantity: Number(form.quantity) }
+    Object.keys(payload).forEach(k => { if (payload[k] === '') payload[k] = null })
+    payload.title = form.title.trim()
+    const { error } = await onAdd(payload)
+    if (error) { setErr(error.message); setSaving(false); return }
+    setForm(EMPTY_BOOK); setErr(''); setSaving(false); onClose()
+  }
+
+  function lbl(text, req) {
+    return <label className="p4c-label" style={{ fontSize: '0.72rem' }}>{text}{req && <span style={{ color: '#F6AA3C' }}> *</span>}</label>
+  }
+
+  return (
+    <>
+      {open && <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 90 }} onClick={onClose} />}
+      <div style={{
+        position: 'fixed', top: 0, right: 0, height: '100vh', width: 'min(440px, 100vw)',
+        background: '#0d233e', borderLeft: '1px solid rgba(255,255,255,0.1)',
+        transform: open ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.35s cubic-bezier(0.77,0,0.175,1)',
+        zIndex: 100, overflowY: 'auto', display: 'flex', flexDirection: 'column',
+      }}>
+        <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.1rem', color: 'white' }}>Log Books</h3>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }}>×</button>
+        </div>
+        <form onSubmit={handleSubmit} style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.85rem', flex: 1 }}>
+          <div>{lbl('Title', true)}<input className="p4c-input" value={form.title} onChange={e => set('title', e.target.value)} placeholder="Book title" /></div>
+          <div>{lbl('Author')}<input className="p4c-input" value={form.author} onChange={e => set('author', e.target.value)} /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div>{lbl('Genre')}<select className="p4c-input" value={form.genre} onChange={e => set('genre', e.target.value)} style={{ cursor: 'pointer' }}><option value="">Select…</option>{GENRE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
+            <div>{lbl('Age Range')}<select className="p4c-input" value={form.age_range} onChange={e => set('age_range', e.target.value)} style={{ cursor: 'pointer' }}><option value="">Select…</option>{AGE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
+            <div>{lbl('Condition')}<select className="p4c-input" value={form.condition} onChange={e => set('condition', e.target.value)} style={{ cursor: 'pointer' }}>{CONDITION_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
+            <div>{lbl('Quantity', true)}<input className="p4c-input" type="number" min="1" value={form.quantity} onChange={e => set('quantity', e.target.value)} /></div>
+          </div>
+          <div>{lbl('Date Received')}<input className="p4c-input" type="date" value={form.date_received} onChange={e => set('date_received', e.target.value)} /></div>
+          {err && <p style={{ color: '#fca5a5', fontSize: '0.82rem' }}>{err}</p>}
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: 'auto', paddingTop: '0.5rem' }}>
+            <button type="button" className="pill-button secondary" style={{ flex: 1, fontSize: '0.85rem' }} onClick={onClose}>Cancel</button>
+            <button type="submit" className="pill-button orange" style={{ flex: 2, fontSize: '0.85rem' }} disabled={saving}>{saving ? <span className="p4c-spinner-sm" /> : 'Log Books'}</button>
+          </div>
+        </form>
+      </div>
+    </>
+  )
+}
+
+// ── Distribution Modal ─────────────────────────────────────────
+function DistributionModal({ open, onClose, books, chapterId, onLogged }) {
+  const { user } = useAuth()
+  const [orgId,    setOrgId]    = useState('')
+  const [orgs,     setOrgs]     = useState([])
+  const [selected, setSelected] = useState({})
+  const [date,     setDate]     = useState(new Date().toISOString().slice(0, 10))
+  const [notes,    setNotes]    = useState('')
+  const [saving,   setSaving]   = useState(false)
+  const [err,      setErr]      = useState('')
+
+  useEffect(() => {
+    if (!open || !chapterId) return
+    supabase.from('organizations').select('id, org_name')
+      .eq('chapter_id', chapterId).eq('current_status', 'Partnership Established').order('org_name')
+      .then(({ data }) => setOrgs(data ?? []))
+  }, [open, chapterId])
+
+  function toggleBook(bookId) {
+    setSelected(prev => {
+      const next = { ...prev }
+      if (next[bookId] != null) delete next[bookId]
+      else next[bookId] = 1
+      return next
+    })
+  }
+
+  function setQty(bookId, qty) {
+    setSelected(prev => ({ ...prev, [bookId]: Math.max(1, Number(qty)) }))
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setErr('')
+    if (!orgId) { setErr('Select an organization.'); return }
+    const items = Object.entries(selected).map(([bookId, quantity]) => ({ bookId, quantity }))
+    if (items.length === 0) { setErr('Select at least one book.'); return }
+    for (const item of items) {
+      const book = books.find(b => b.id === item.bookId)
+      if (!book || book.quantity < item.quantity) { setErr(`Not enough stock for "${book?.title ?? item.bookId}".`); return }
+    }
+    setSaving(true)
+    const errors = []
+    for (const item of items) {
+      const { data: book } = await supabase.from('books').select('quantity').eq('id', item.bookId).single()
+      if (!book || book.quantity < item.quantity) { errors.push(`Not enough stock.`); continue }
+      const { error: distErr } = await supabase.from('distributions').insert({
+        chapter_id: chapterId, org_id: orgId, quantity: item.quantity,
+        distribution_date: date, logged_by: user?.id, notes,
+      })
+      if (distErr) { errors.push(distErr.message); continue }
+      await supabase.from('books').update({ quantity: book.quantity - item.quantity }).eq('id', item.bookId)
+    }
+    setSaving(false)
+    if (errors.length > 0) { setErr(errors[0]); return }
+    setOrgId(''); setSelected({}); setNotes(''); setDate(new Date().toISOString().slice(0, 10))
+    onLogged(); onClose()
+  }
+
+  if (!open) return null
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div style={{ background: '#0d233e', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', width: 'min(600px, 100%)', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.1rem', color: 'white' }}>Log Distribution</h3>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }}>×</button>
+        </div>
+        <form onSubmit={handleSubmit} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <label className="p4c-label" style={{ fontSize: '0.72rem' }}>Organization<span style={{ color: '#F6AA3C' }}> *</span></label>
+            <select className="p4c-input" value={orgId} onChange={e => setOrgId(e.target.value)} style={{ cursor: 'pointer' }}>
+              <option value="">Select established partner…</option>
+              {orgs.map(o => <option key={o.id} value={o.id}>{o.org_name}</option>)}
+            </select>
+            {orgs.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem', marginTop: '0.25rem' }}>No established partnerships yet.</p>}
+          </div>
+          <div>
+            <label className="p4c-label" style={{ fontSize: '0.72rem' }}>Select Books<span style={{ color: '#F6AA3C' }}> *</span></label>
+            <div style={{ border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: '10px', maxHeight: '240px', overflowY: 'auto' }}>
+              {books.filter(b => b.quantity > 0).map(book => (
+                <label key={book.id} style={{
+                  display: 'flex', alignItems: 'center', gap: '0.75rem',
+                  padding: '0.65rem 1rem', cursor: 'pointer',
+                  borderBottom: '1px solid rgba(255,255,255,0.06)',
+                  background: selected[book.id] != null ? 'rgba(246,170,60,0.06)' : 'transparent',
+                }}>
+                  <input type="checkbox" checked={selected[book.id] != null} onChange={() => toggleBook(book.id)} style={{ accentColor: '#F6AA3C' }} />
+                  <span style={{ flex: 1, fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'rgba(255,255,255,0.85)' }}>
+                    {book.title}{book.author ? ` — ${book.author}` : ''}
+                    <span style={{ color: 'rgba(255,255,255,0.4)', marginLeft: '0.5rem', fontSize: '0.78rem' }}>({book.quantity} in stock)</span>
+                  </span>
+                  {selected[book.id] != null && (
+                    <input type="number" min="1" max={book.quantity} value={selected[book.id]}
+                      onChange={e => setQty(book.id, e.target.value)} onClick={e => e.stopPropagation()}
+                      style={{ width: '64px', padding: '0.25rem 0.5rem', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', color: 'white', fontFamily: 'var(--font-body)', fontSize: '0.85rem', outline: 'none' }}
+                    />
+                  )}
+                </label>
+              ))}
+              {books.filter(b => b.quantity > 0).length === 0 && (
+                <p style={{ padding: '1rem', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', textAlign: 'center' }}>No books in stock.</p>
+              )}
+            </div>
+          </div>
+          <div>
+            <label className="p4c-label" style={{ fontSize: '0.72rem' }}>Distribution Date</label>
+            <input className="p4c-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
+          </div>
+          <div>
+            <label className="p4c-label" style={{ fontSize: '0.72rem' }}>Notes</label>
+            <textarea className="p4c-input" value={notes} onChange={e => setNotes(e.target.value)} style={{ minHeight: '70px' }} />
+          </div>
+          {err && <p style={{ color: '#fca5a5', fontSize: '0.82rem' }}>{err}</p>}
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button type="button" className="pill-button secondary" style={{ flex: 1, fontSize: '0.85rem' }} onClick={onClose}>Cancel</button>
+            <button type="submit" className="pill-button orange" style={{ flex: 2, fontSize: '0.85rem' }} disabled={saving}>{saving ? <span className="p4c-spinner-sm" /> : 'Log Distribution'}</button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }
 
 // ── Inventory Tab ─────────────────────────────────────────────
 function InventoryTab({ chapterId }) {
-  const [books,   setBooks]   = useState([])
-  const [count,   setCount]   = useState(0)
-  const [totals,  setTotals]  = useState({ total: 0, byGenre: {} })
-  const [loading, setLoading] = useState(true)
-  const [page,    setPage]    = useState(0)
-  const [search,  setSearch]  = useState('')
-  const [sortCol, setSortCol] = useState('row_number')
-  const [sortDir, setSortDir] = useState('asc')
+  const { user } = useAuth()
+  const [books,     setBooks]     = useState([])
+  const [count,     setCount]     = useState(0)
+  const [totals,    setTotals]    = useState({ total: 0, byGenre: {} })
+  const [loading,   setLoading]   = useState(true)
+  const [page,      setPage]      = useState(0)
+  const [search,    setSearch]    = useState('')
+  const [sortCol,   setSortCol]   = useState('row_number')
+  const [sortDir,   setSortDir]   = useState('asc')
+  const [editCell,  setEditCell]  = useState(null)
+  const [editValue, setEditValue] = useState('')
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [distOpen,  setDistOpen]  = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -308,6 +688,33 @@ function InventoryTab({ chapterId }) {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortCol(col); setSortDir('asc') }
     setPage(0)
+  }
+
+  function startEdit(rowId, col, value) { setEditCell({ rowId, col }); setEditValue(value ?? '') }
+
+  async function commitEdit() {
+    if (!editCell) return
+    const { rowId, col } = editCell
+    setEditCell(null)
+    const colDef = BOOK_COLS.find(c => c.key === col)
+    const val = colDef?.type === 'number' ? (editValue === '' ? null : Number(editValue)) : (editValue || null)
+    const { data } = await supabase.from('books').update({ [col]: val }).eq('id', rowId).select().single()
+    if (data) {
+      setBooks(prev => prev.map(b => b.id === rowId ? data : b))
+      // refresh totals if quantity changed
+      if (col === 'quantity') load()
+    }
+  }
+
+  function cancelEdit() { setEditCell(null); setEditValue('') }
+
+  async function addBook(fields) {
+    const { data, error } = await supabase
+      .from('books')
+      .insert({ ...fields, chapter_id: chapterId, logged_by: user?.id })
+      .select().single()
+    if (!error && data) { setBooks(prev => [data, ...prev]); setCount(prev => prev + 1); load() }
+    return { data, error }
   }
 
   const sorted   = Object.entries(totals.byGenre).sort((a, b) => b[1] - a[1])
@@ -356,6 +763,8 @@ function InventoryTab({ chapterId }) {
           }}>Clear</button>
         )}
         <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>{count} books</span>
+        <button className="pill-button secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1.1rem', flexShrink: 0 }} onClick={() => setDistOpen(true)}>Log Distribution</button>
+        <button className="pill-button orange" style={{ fontSize: '0.85rem', padding: '0.5rem 1.1rem', flexShrink: 0 }} onClick={() => setPanelOpen(true)}>+ Log Books</button>
       </div>
 
       <div style={{ overflowX: 'auto', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', background: '#122847' }}>
@@ -378,33 +787,14 @@ function InventoryTab({ chapterId }) {
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
                 >
-                  {BOOK_COLS.map(col => {
-                    const val = book[col.key]
-                    const tdStyle = {
-                      padding: 0, borderBottom: '1px solid rgba(255,255,255,0.06)',
-                      width: col.w, minWidth: col.w, maxWidth: col.w, verticalAlign: 'middle',
-                    }
-                    const cellStyle = {
-                      display: 'block', padding: '0.5rem 0.75rem',
-                      fontFamily: 'var(--font-body)', fontSize: '0.825rem', color: 'rgba(255,255,255,0.8)',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }
-                    if (col.key === 'condition' && val) {
-                      const { bg, color } = conditionStyle(val)
-                      return (
-                        <td key={col.key} style={tdStyle}>
-                          <div style={{ padding: '0.5rem 0.75rem' }}>
-                            <span style={{ background: bg, color, padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>{val}</span>
-                          </div>
-                        </td>
-                      )
-                    }
-                    return (
-                      <td key={col.key} style={tdStyle}>
-                        <span style={cellStyle}>{col.key === 'date_received' ? fmtDate(val) : (val ?? <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>)}</span>
-                      </td>
-                    )
-                  })}
+                  {BOOK_COLS.map(col => (
+                    <EditCell
+                      key={col.key} row={book} col={col}
+                      editCell={editCell} editValue={editValue}
+                      onStartEdit={startEdit} onEditChange={setEditValue}
+                      onCommit={commitEdit} onCancel={cancelEdit}
+                    />
+                  ))}
                 </tr>
               ))}
             </tbody>
@@ -412,6 +802,8 @@ function InventoryTab({ chapterId }) {
         )}
       </div>
       <Pagination page={page} totalPages={Math.max(1, Math.ceil(count / PAGE_SIZE))} onPage={setPage} />
+      <LogBooksPanel open={panelOpen} onClose={() => setPanelOpen(false)} onAdd={addBook} />
+      <DistributionModal open={distOpen} onClose={() => setDistOpen(false)} books={books} chapterId={chapterId} onLogged={load} />
     </div>
   )
 }
@@ -652,7 +1044,6 @@ function TeamStatsTab({ chapterId }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-        {/* Outreach pipeline */}
         <div style={{ background: '#122847', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '1.25rem' }}>
           <p style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.85rem' }}>Outreach Pipeline</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
@@ -668,7 +1059,6 @@ function TeamStatsTab({ chapterId }) {
           </div>
         </div>
 
-        {/* Books by condition */}
         <div style={{ background: '#122847', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '1.25rem' }}>
           <p style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.85rem' }}>Books by Condition</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
@@ -685,7 +1075,6 @@ function TeamStatsTab({ chapterId }) {
         </div>
       </div>
 
-      {/* Recent distributions */}
       {stats.dists.length > 0 && (
         <div style={{ background: '#122847', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '1.25rem' }}>
           <p style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.85rem' }}>Recent Distributions</p>
