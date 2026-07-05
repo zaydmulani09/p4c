@@ -563,19 +563,36 @@ function DistributionModal({ open, onClose, books, chapterId, onLogged }) {
       if (!book || book.quantity < item.quantity) { setErr(`Not enough stock for "${book?.title ?? item.bookId}".`); return }
     }
     setSaving(true)
-    const errors = []
+
+    // Verify stock server-side and collect book details before writing anything
+    const verified = []
     for (const item of items) {
-      const { data: book } = await supabase.from('books').select('quantity').eq('id', item.bookId).single()
-      if (!book || book.quantity < item.quantity) { errors.push(`Not enough stock.`); continue }
-      const { error: distErr } = await supabase.from('distributions').insert({
-        chapter_id: chapterId, org_id: orgId, quantity: item.quantity,
-        distribution_date: date, logged_by: user?.id, notes,
-      })
-      if (distErr) { errors.push(distErr.message); continue }
-      await supabase.from('books').update({ quantity: book.quantity - item.quantity }).eq('id', item.bookId)
+      const { data: book } = await supabase.from('books').select('quantity, title, author').eq('id', item.bookId).single()
+      if (!book || book.quantity < item.quantity) {
+        setErr(`Not enough stock for "${book?.title ?? item.bookId}".`)
+        setSaving(false)
+        return
+      }
+      verified.push({ bookId: item.bookId, title: book.title, author: book.author, currentQty: book.quantity, quantity: item.quantity })
     }
+
+    const totalQty    = verified.reduce((s, v) => s + v.quantity, 0)
+    const storedItems = verified.map(v => ({ book_id: v.bookId, title: v.title, author: v.author, quantity: v.quantity }))
+
+    // Insert ONE distribution row for the whole event
+    const { error: distErr } = await supabase.from('distributions').insert({
+      chapter_id: chapterId, org_id: orgId, quantity: totalQty,
+      distribution_date: date, logged_by: user?.id,
+      notes: JSON.stringify({ notes, items: storedItems }),
+    })
+    if (distErr) { setSaving(false); setErr(distErr.message); return }
+
+    // Decrement inventory for each book
+    for (const v of verified) {
+      await supabase.from('books').update({ quantity: v.currentQty - v.quantity }).eq('id', v.bookId)
+    }
+
     setSaving(false)
-    if (errors.length > 0) { setErr(errors[0]); return }
     setOrgId(''); setSelected({}); setNotes(''); setDate(new Date().toISOString().slice(0, 10))
     onLogged(); onClose()
   }
@@ -1009,10 +1026,22 @@ function PipelineTab({ chapterId }) {
   )
 }
 
+function parseDistNotes(raw) {
+  if (!raw) return { text: '', items: [] }
+  try {
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.items)) {
+      return { text: parsed.notes ?? '', items: parsed.items }
+    }
+  } catch {}
+  return { text: raw, items: [] }
+}
+
 // ── Team Stats Tab ────────────────────────────────────────────
 function TeamStatsTab({ chapterId }) {
-  const [stats,   setStats]   = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [stats,        setStats]        = useState(null)
+  const [loading,      setLoading]      = useState(true)
+  const [expandedDist, setExpandedDist] = useState(null)
 
   useEffect(() => {
     Promise.all([
@@ -1020,7 +1049,7 @@ function TeamStatsTab({ chapterId }) {
       supabase.from('books').select('condition, quantity, genre').eq('chapter_id', chapterId),
       supabase
         .from('distributions')
-        .select('quantity, distribution_date, organizations(org_name)')
+        .select('id, quantity, distribution_date, notes, organizations(org_name)')
         .eq('chapter_id', chapterId)
         .order('distribution_date', { ascending: false })
         .limit(25),
@@ -1102,13 +1131,47 @@ function TeamStatsTab({ chapterId }) {
         <div style={{ background: '#122847', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '1.25rem' }}>
           <p style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.85rem' }}>Recent Distributions</p>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {stats.dists.map((d, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.6rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', width: '90px', flexShrink: 0 }}>{fmtDate(d.distribution_date)}</span>
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'white', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.organizations?.org_name ?? '—'}</span>
-                <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.9rem', color: '#F6AA3C', whiteSpace: 'nowrap' }}>{d.quantity} books</span>
-              </div>
-            ))}
+            {stats.dists.map((d, i) => {
+              const { text: noteText, items: distItems } = parseDistNotes(d.notes)
+              const key        = d.id ?? i
+              const isExpanded = expandedDist === key
+              const expandable = distItems.length > 0
+              return (
+                <div key={key}>
+                  <div
+                    onClick={() => expandable && setExpandedDist(isExpanded ? null : key)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '1rem',
+                      padding: '0.6rem 0',
+                      borderBottom: isExpanded ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                      cursor: expandable ? 'pointer' : 'default',
+                    }}
+                  >
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', width: '90px', flexShrink: 0 }}>{fmtDate(d.distribution_date)}</span>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'white', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.organizations?.org_name ?? '—'}</span>
+                    {expandable && (
+                      <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', flexShrink: 0 }}>{isExpanded ? '▾' : '▸'}</span>
+                    )}
+                    <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.9rem', color: '#F6AA3C', whiteSpace: 'nowrap' }}>{d.quantity} books</span>
+                  </div>
+                  {isExpanded && (
+                    <div style={{ paddingLeft: '106px', paddingBottom: '0.6rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      {distItems.map((item, j) => (
+                        <div key={j} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.2rem 0' }}>
+                          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'rgba(255,255,255,0.65)', flex: 1 }}>
+                            {item.title}{item.author ? ` — ${item.author}` : ''}
+                          </span>
+                          <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.82rem', color: '#F6AA3C', flexShrink: 0 }}>×{item.quantity}</span>
+                        </div>
+                      ))}
+                      {noteText && (
+                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginTop: '0.4rem', fontStyle: 'italic' }}>{noteText}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

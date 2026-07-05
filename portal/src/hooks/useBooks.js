@@ -114,37 +114,44 @@ export function useBooks(filters = {}, page = 0) {
     // bookItems: [{ bookId, quantity }]
     const errors = []
 
+    // Verify stock and collect book details for all items before writing anything
+    const verified = []
     for (const item of bookItems) {
-      // Check stock
       const { data: book } = await supabase
         .from('books')
-        .select('quantity')
+        .select('quantity, title, author')
         .eq('id', item.bookId)
         .single()
 
       if (!book || book.quantity < item.quantity) {
         errors.push(`Not enough stock for book ${item.bookId}`)
-        continue
+        return { errors }
       }
+      verified.push({ bookId: item.bookId, title: book.title, author: book.author, currentQty: book.quantity, quantity: item.quantity })
+    }
 
-      // Insert distribution row
-      const { error: distErr } = await supabase
-        .from('distributions')
-        .insert({
-          chapter_id: chapterId,
-          org_id: orgId,
-          quantity: item.quantity,
-          distribution_date: date,
-          logged_by: user?.id,
-          notes,
-        })
-      if (distErr) { errors.push(distErr.message); continue }
+    const totalQty    = verified.reduce((s, v) => s + v.quantity, 0)
+    const storedItems = verified.map(v => ({ book_id: v.bookId, title: v.title, author: v.author, quantity: v.quantity }))
 
-      // Decrement quantity
+    // Insert ONE distribution row for the whole event
+    const { error: distErr } = await supabase
+      .from('distributions')
+      .insert({
+        chapter_id: chapterId,
+        org_id: orgId,
+        quantity: totalQty,
+        distribution_date: date,
+        logged_by: user?.id,
+        notes: JSON.stringify({ notes, items: storedItems }),
+      })
+    if (distErr) { errors.push(distErr.message); return { errors } }
+
+    // Decrement inventory for each book
+    for (const v of verified) {
       const { error: updErr } = await supabase
         .from('books')
-        .update({ quantity: book.quantity - item.quantity })
-        .eq('id', item.bookId)
+        .update({ quantity: v.currentQty - v.quantity })
+        .eq('id', v.bookId)
       if (updErr) errors.push(updErr.message)
     }
 
