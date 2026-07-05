@@ -5,6 +5,7 @@ import {
   useSensor, useSensors, closestCorners,
   useDroppable, useDraggable,
 } from '@dnd-kit/core'
+import { restrictToWindowEdges } from '@dnd-kit/modifiers'
 import { supabase } from '../../lib/supabase.js'
 import { useAuth } from '../../context/AuthContext.jsx'
 
@@ -905,6 +906,7 @@ function PipelineTab({ chapterId }) {
   const [orgs,      setOrgs]      = useState([])
   const [loading,   setLoading]   = useState(true)
   const [activeOrg, setActiveOrg] = useState(null)
+  const [lastMove,  setLastMove]  = useState(null)
   const [collapsed, setCollapsed] = useState(() => {
     const init = {}
     COLLAPSED_BY_DEFAULT.forEach(s => { init[s] = true })
@@ -921,6 +923,20 @@ function PipelineTab({ chapterId }) {
       .order('updated_at', { ascending: false })
       .then(({ data }) => { setOrgs(data ?? []); setLoading(false) })
   }, [chapterId])
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && lastMove) {
+        e.preventDefault()
+        const { cardId, fromStatus } = lastMove
+        setOrgs(prev => prev.map(o => o.id === cardId ? { ...o, current_status: fromStatus } : o))
+        supabase.from('organizations').update({ current_status: fromStatus }).eq('id', cardId)
+        setLastMove(null)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [lastMove])
 
   const byStatus = {}
   ALL_PIPELINE_STATUSES.forEach(s => { byStatus[s] = [] })
@@ -940,10 +956,15 @@ function PipelineTab({ chapterId }) {
     if (!over) return
     const org = orgs.find(o => o.id === active.id)
     if (!org || org.current_status === over.id) return
-    const newStatus = over.id
-    setOrgs(prev => prev.map(o => o.id === org.id ? { ...o, current_status: newStatus } : o))
-    const { error } = await supabase.from('organizations').update({ current_status: newStatus }).eq('id', org.id)
-    if (error) setOrgs(prev => prev.map(o => o.id === org.id ? { ...o, current_status: org.current_status } : o))
+    const fromStatus = org.current_status
+    const toStatus   = over.id
+    setOrgs(prev => prev.map(o => o.id === org.id ? { ...o, current_status: toStatus } : o))
+    setLastMove({ cardId: org.id, fromStatus, toStatus })
+    const { error } = await supabase.from('organizations').update({ current_status: toStatus }).eq('id', org.id)
+    if (error) {
+      setOrgs(prev => prev.map(o => o.id === org.id ? { ...o, current_status: fromStatus } : o))
+      setLastMove(null)
+    }
   }
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}><div className="p4c-spinner" /></div>
@@ -952,7 +973,7 @@ function PipelineTab({ chapterId }) {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)' }}>
-          {orgs.length} organizations · drag cards to update status
+          {orgs.length} organizations · drag cards to update status{lastMove ? ' · Ctrl+Z to undo' : ''}
         </p>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           {Array.from(COLLAPSED_BY_DEFAULT).map(s => (
@@ -968,7 +989,7 @@ function PipelineTab({ chapterId }) {
         </div>
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCorners} modifiers={[restrictToWindowEdges]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '1.5rem', alignItems: 'flex-start' }}>
           {ALL_PIPELINE_STATUSES.map(status => (
             <DroppableColumn
@@ -980,7 +1001,7 @@ function PipelineTab({ chapterId }) {
             />
           ))}
         </div>
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {activeOrg && <PipelineCard org={activeOrg} isDragging />}
         </DragOverlay>
       </DndContext>
