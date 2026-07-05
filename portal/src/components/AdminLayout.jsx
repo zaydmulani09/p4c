@@ -67,7 +67,9 @@ export default function AdminLayout() {
           flex: 1, padding: '2rem 1.5rem', width: '100%',
           maxWidth: '1400px', alignSelf: 'center', boxSizing: 'border-box',
         }}>
-          <Outlet />
+          <div key={location.pathname} className="p4c-page-enter">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

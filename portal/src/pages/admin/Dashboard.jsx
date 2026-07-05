@@ -15,8 +15,28 @@ async function fetchNetworkSummary(stats) {
   }
 }
 
+// ── Count-up hook ─────────────────────────────────────────────
+function useCountUp(target, duration = 900) {
+  const [current, setCurrent] = useState(0)
+  useEffect(() => {
+    if (target == null || typeof target !== 'number') return
+    let raf
+    const startTime = performance.now()
+    function step(now) {
+      const t = Math.min((now - startTime) / duration, 1)
+      const eased = 1 - (1 - t) * (1 - t) * (1 - t)
+      setCurrent(Math.round(eased * target))
+      if (t < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [target, duration])
+  return current
+}
+
 // ── Stat Card ─────────────────────────────────────────────────
 function StatCard({ label, value, loading }) {
+  const counted = useCountUp(typeof value === 'number' ? value : null)
   return (
     <div style={{
       background: '#0d233e', border: '1px solid rgba(255,255,255,0.08)',
@@ -26,7 +46,7 @@ function StatCard({ label, value, loading }) {
         <div className="p4c-spinner" style={{ width: 28, height: 28, margin: '0 auto' }} />
       ) : (
         <p style={{ fontFamily: 'var(--font-heading)', fontWeight: 900, fontSize: '2.2rem', color: '#F6AA3C', lineHeight: 1, letterSpacing: '-0.03em' }}>
-          {typeof value === 'number' ? value.toLocaleString() : value}
+          {typeof value === 'number' ? counted.toLocaleString() : value}
         </p>
       )}
       <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', fontWeight: 600, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '0.5rem' }}>
@@ -164,7 +184,7 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {leaderboard.map((c, i) => (
-                    <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                    <tr key={c.id} className="p4c-item-in" style={{ animationDelay: `${Math.min(i, 12) * 0.04}s`, borderBottom: '1px solid rgba(255,255,255,0.05)' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
@@ -205,8 +225,9 @@ export default function AdminDashboard() {
             <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}><div className="p4c-spinner" /></div>
           ) : (
             <div style={{ overflowY: 'auto', maxHeight: '340px' }}>
-              {healthFeed.map(c => (
-                <div key={c.id} style={{
+              {healthFeed.map((c, i) => (
+                <div key={c.id} className="p4c-item-in" style={{
+                  animationDelay: `${Math.min(i, 12) * 0.04}s`,
                   display: 'flex', alignItems: 'center', gap: '0.75rem',
                   padding: '0.75rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)',
                 }}>
@@ -242,7 +263,8 @@ export default function AdminDashboard() {
         ) : (
           <div>
             {activity.map((item, i) => (
-              <div key={i} style={{
+              <div key={i} className="p4c-item-in" style={{
+                animationDelay: `${Math.min(i, 12) * 0.04}s`,
                 display: 'flex', alignItems: 'center', gap: '0.75rem',
                 padding: '0.65rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.04)',
               }}>

@@ -124,7 +124,9 @@ export default function ChapterLayout() {
             boxSizing: 'border-box',
           }}
         >
-          <Outlet />
+          <div key={location.pathname} className="p4c-page-enter">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

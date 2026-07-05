@@ -447,6 +447,77 @@ select option {
   color: white;
 }
 
+/* ── Portal UI Animations ────────────────────────────────────── */
+
+/* Button scale on hover — layered on top of existing translateY */
+.pill-button.primary:hover   { transform: translateY(-3px) scale(1.03); }
+.pill-button.secondary:hover { transform: translateY(-3px) scale(1.03); }
+.pill-button.orange:hover    { transform: translateY(-3px) scale(1.03); }
+
+/* Page fade-in on route change */
+@keyframes p4c-page-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.p4c-page-enter {
+  animation: p4c-page-enter 0.22s ease-out both;
+}
+
+/* List / table-row staggered entrance */
+@keyframes p4c-item-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.p4c-item-in {
+  animation: p4c-item-in 0.2s ease-out both;
+}
+
+/* Centered modal / dialog entrance */
+@keyframes p4c-modal-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.p4c-modal-in {
+  animation: p4c-modal-in 0.2s ease-out both;
+}
+
+/* Accordion expand / collapse */
+.p4c-expand {
+  overflow: hidden;
+  transition: max-height 0.28s ease-out, opacity 0.2s ease-out;
+}
+.p4c-expand-open   { max-height: 600px; opacity: 1; }
+.p4c-expand-closed { max-height: 0;     opacity: 0; }
+
+/* Sidebar nav link — replaces inline styles, adds left-slide active indicator */
+.sidebar-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  margin: 0.1rem 0.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.5);
+  background: transparent;
+  border-left: 3px solid transparent;
+  transition: color 0.18s ease-out, background 0.18s ease-out,
+              border-color 0.18s ease-out, padding-left 0.18s ease-out;
+}
+.sidebar-nav-link:hover {
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.04);
+}
+.sidebar-nav-link.active {
+  color: white;
+  background: rgba(255,255,255,0.08);
+  border-left-color: #F6AA3C;
+  padding-left: 1.25rem;
+}
+
 /* ── Mobile ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .navbar { padding: 1.5rem; }

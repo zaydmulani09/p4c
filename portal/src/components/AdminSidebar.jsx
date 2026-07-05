@@ -106,22 +106,7 @@ export default function AdminSidebar({ open, onClose }) {
                 to={item.to}
                 end={item.end}
                 onClick={onClose}
-                style={({ isActive }) => ({
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.65rem 1rem',
-                  margin: '0.1rem 0.5rem',
-                  borderRadius: '8px',
-                  textDecoration: 'none',
-                  fontFamily: 'var(--font-body)',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
-                  background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-                  borderLeft: isActive ? '3px solid #F6AA3C' : '3px solid transparent',
-                  transition: 'all 0.15s ease',
-                })}
+                className={({ isActive }) => `sidebar-nav-link${isActive ? ' active' : ''}`}
               >
                 <span style={{ flex: 1 }}>{item.label}</span>
                 {item.stub && (

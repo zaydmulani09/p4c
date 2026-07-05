@@ -65,7 +65,7 @@ function AppCard({ app, onApprove, onReject }) {
         </div>
 
         {/* Expanded details */}
-        {expanded && (
+        <div className={`p4c-expand ${expanded ? 'p4c-expand-open' : 'p4c-expand-closed'}`}>
           <div style={{ padding: '0 1.25rem 1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ paddingTop: '1rem', marginBottom: '1rem' }}>
               <p style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>
@@ -122,7 +122,7 @@ function AppCard({ app, onApprove, onReject }) {
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Reject Modal */}
@@ -131,7 +131,7 @@ function AppCard({ app, onApprove, onReject }) {
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
           zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
         }}>
-          <div style={{
+          <div className="p4c-modal-in" style={{
             background: '#0d233e', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)',
             width: 'min(480px,100%)', padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1rem',
           }}>
@@ -230,13 +230,14 @@ export default function Applications() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {applications.map(app => (
-            <AppCard
-              key={app.id}
-              app={app}
-              onApprove={approveApplication}
-              onReject={rejectApplication}
-            />
+          {applications.map((app, i) => (
+            <div key={app.id} className="p4c-item-in" style={{ animationDelay: `${Math.min(i, 10) * 0.05}s` }}>
+              <AppCard
+                app={app}
+                onApprove={approveApplication}
+                onReject={rejectApplication}
+              />
+            </div>
           ))}
         </div>
       )}

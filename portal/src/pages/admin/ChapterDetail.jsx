@@ -433,7 +433,8 @@ function TrackerTab({ chapterId }) {
               {orgs.map((org, i) => (
                 <tr
                   key={org.id}
-                  style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)', transition: 'background 0.15s ease' }}
+                  className="p4c-item-in"
+                  style={{ animationDelay: `${Math.min(i, 15) * 0.03}s`, background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)', transition: 'background 0.15s ease' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
                 >
@@ -582,7 +583,7 @@ function DistributionModal({ open, onClose, books, chapterId, onLogged }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div style={{ background: '#0d233e', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', width: 'min(600px, 100%)', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <div className="p4c-modal-in" style={{ background: '#0d233e', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', width: 'min(600px, 100%)', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.1rem', color: 'white' }}>Log Distribution</h3>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }}>×</button>
@@ -783,7 +784,8 @@ function InventoryTab({ chapterId }) {
               {books.map((book, i) => (
                 <tr
                   key={book.id}
-                  style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)', transition: 'background 0.15s ease' }}
+                  className="p4c-item-in"
+                  style={{ animationDelay: `${Math.min(i, 15) * 0.03}s`, background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)', transition: 'background 0.15s ease' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
                 >
