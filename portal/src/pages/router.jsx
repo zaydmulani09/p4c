@@ -56,7 +56,7 @@ export const router = createBrowserRouter(
     {
       path: '/chapter',
       element: (
-        <Guard allowedRoles={['chapter_lead']}>
+        <Guard allowedRoles={['chapter_lead', 'volunteer']}>
           <ChapterLayout />
         </Guard>
       ),
