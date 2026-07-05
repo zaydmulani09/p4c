@@ -120,10 +120,11 @@ export default function AdminDashboard() {
 
       {/* Stat Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
-        <StatCard label="Active Chapters"         value={stats?.totalChapters}       loading={loading} />
-        <StatCard label="Books in Inventory"      value={stats?.totalBooksDistributed} loading={loading} />
-        <StatCard label="Organizations Contacted" value={stats?.totalOrgsContacted}   loading={loading} />
-        <StatCard label="Partnerships Established" value={stats?.totalPartnerships}   loading={loading} />
+        <StatCard label="Active Chapters"          value={stats?.totalChapters}         loading={loading} />
+        <StatCard label="Books Distributed"        value={stats?.totalBooksDistributed} loading={loading} />
+        <StatCard label="Distributions"            value={stats?.totalDistributions}    loading={loading} />
+        <StatCard label="Organizations Contacted"  value={stats?.totalOrgsContacted}    loading={loading} />
+        <StatCard label="Partnerships Established" value={stats?.totalPartnerships}     loading={loading} />
       </div>
 
       {/* AI Summary */}

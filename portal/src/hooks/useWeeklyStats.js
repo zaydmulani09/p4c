@@ -26,6 +26,7 @@ export function useWeeklyStats() {
     orgs: 0,
     books: 0,
     distributions: 0,
+    booksDistributed: 0,
     activeConversations: 0,
   })
   const [loading, setLoading] = useState(true)
@@ -42,12 +43,12 @@ export function useWeeklyStats() {
         .gte('created_at', since),
       supabase
         .from('books')
-        .select('id', { count: 'exact', head: true })
+        .select('quantity')
         .eq('chapter_id', chapterId)
         .gte('created_at', since),
       supabase
         .from('distributions')
-        .select('id', { count: 'exact', head: true })
+        .select('quantity')
         .eq('chapter_id', chapterId)
         .gte('created_at', since),
       supabase
@@ -56,10 +57,12 @@ export function useWeeklyStats() {
         .eq('chapter_id', chapterId)
         .in('current_status', ACTIVE_STATUSES),
     ]).then(([orgsRes, booksRes, distRes, activeRes]) => {
+      const distRows = distRes.data ?? []
       setStats({
         orgs:                orgsRes.count  ?? 0,
-        books:               booksRes.count ?? 0,
-        distributions:       distRes.count  ?? 0,
+        books:               (booksRes.data ?? []).reduce((s, b) => s + (b.quantity ?? 0), 0),
+        distributions:       distRows.length,
+        booksDistributed:    distRows.reduce((s, d) => s + (d.quantity ?? 0), 0),
         activeConversations: activeRes.count ?? 0,
       })
       setLoading(false)

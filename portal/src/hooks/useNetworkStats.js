@@ -107,11 +107,15 @@ export function useNetworkStats() {
         return { ...c, daysSince, indicator }
       })
 
+      const totalBooksDistributed = (dists ?? []).reduce((s, d) => s + (d.quantity ?? 0), 0)
+      const totalDistributions    = (dists ?? []).length
+
       setStats({
-        totalChapters:       rpcData?.total_chapters ?? 0,
-        totalBooksDistributed: rpcData?.total_books ?? 0,
-        totalOrgsContacted:  orgsCount ?? 0,
-        totalPartnerships:   rpcData?.total_partners ?? 0,
+        totalChapters:         rpcData?.total_chapters ?? 0,
+        totalBooksDistributed,
+        totalDistributions,
+        totalOrgsContacted:    orgsCount ?? 0,
+        totalPartnerships:     rpcData?.total_partners ?? 0,
       })
       setLeaderboard(board)
       setHealthFeed(health)

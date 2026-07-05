@@ -44,14 +44,14 @@ export async function generateWeeklySummary(stats, scope) {
   if (cached) return cached
 
   const isZeroData = scope === 'national'
-    ? !stats.totalBooksDistributed && !stats.totalOrgsContacted
+    ? !stats.totalDistributions && !stats.totalOrgsContacted
     : !stats.orgs && !stats.books && !stats.distributions
 
   const content = isZeroData
     ? `Pages for Change is a new student-led literacy nonprofit just getting started. Write a brief, encouraging message (under 4 sentences, no bullet points) for the ${scope === 'national' ? 'national leadership team' : 'chapter lead'} about the exciting opportunity ahead to build a book distribution network and make a lasting impact in their community.`
     : scope === 'national'
-      ? `Network stats: ${stats.totalChapters} active chapters, ${stats.totalBooksDistributed} books in inventory, ${stats.totalOrgsContacted} organizations contacted, ${stats.totalPartnerships} established partnerships.`
-      : `This week: ${stats.orgs} new organizations logged, ${stats.books} books received, ${stats.distributions} distributions made, ${stats.activeConversations} active conversations ongoing.`
+      ? `Network stats: ${stats.totalChapters} active chapters, ${stats.totalDistributions} distribution events totaling ${stats.totalBooksDistributed} books distributed, ${stats.totalOrgsContacted} organizations contacted, ${stats.totalPartnerships} established partnerships.`
+      : `This week: ${stats.orgs} new organizations logged, ${stats.books} books received, ${stats.distributions} distribution event${stats.distributions !== 1 ? 's' : ''} made (${stats.booksDistributed} books distributed), ${stats.activeConversations} active conversations ongoing.`
 
   try {
     const systemPrompt = scope === 'national'

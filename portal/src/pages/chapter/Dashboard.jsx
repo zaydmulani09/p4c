@@ -451,10 +451,11 @@ export default function Dashboard() {
           gap: '1rem',
         }}
       >
-        <StatCard label="Orgs logged this week"       value={stats.orgs}                loading={statsLoading} />
-        <StatCard label="Books received this week"    value={stats.books}               loading={statsLoading} />
-        <StatCard label="Distributions this week"     value={stats.distributions}       loading={statsLoading} />
-        <StatCard label="Active conversations"        value={stats.activeConversations} loading={statsLoading} />
+        <StatCard label="Orgs logged this week"           value={stats.orgs}                loading={statsLoading} />
+        <StatCard label="Books received this week"        value={stats.books}               loading={statsLoading} />
+        <StatCard label="Distributions this week"         value={stats.distributions}       loading={statsLoading} />
+        <StatCard label="Books distributed this week"     value={stats.booksDistributed}    loading={statsLoading} />
+        <StatCard label="Active conversations"            value={stats.activeConversations} loading={statsLoading} />
       </div>
 
       {/* ── Quick Actions ── */}
