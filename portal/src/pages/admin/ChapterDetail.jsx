@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import {
+  DndContext, DragOverlay, PointerSensor,
+  useSensor, useSensors, closestCorners,
+  useDroppable, useDraggable,
+} from '@dnd-kit/core'
 import { supabase } from '../../lib/supabase.js'
 
 // ── Constants ─────────────────────────────────────────────────
@@ -411,15 +416,108 @@ function InventoryTab({ chapterId }) {
   )
 }
 
-// ── Pipeline Tab (read-only kanban) ───────────────────────────
+// ── Pipeline helpers (DnD) ────────────────────────────────────
+function PipelineCard({ org, isDragging }) {
+  const isEstablished = org.current_status === 'Partnership Established'
+  return (
+    <div style={{
+      background: isDragging ? 'rgba(246,170,60,0.12)' : 'rgba(255,255,255,0.05)',
+      border: `1px solid ${isDragging ? 'rgba(246,170,60,0.4)' : 'rgba(255,255,255,0.1)'}`,
+      borderLeft: isEstablished ? '3px solid #86efac' : '3px solid transparent',
+      borderRadius: '10px', padding: '0.65rem 0.85rem',
+      cursor: 'grab', opacity: isDragging ? 0.85 : 1, userSelect: 'none',
+    }}>
+      <p style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.85rem', color: 'white', margin: 0, lineHeight: 1.3 }}>{org.org_name}</p>
+      {org.org_type && (
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', marginTop: '0.3rem',
+          background: 'rgba(246,170,60,0.15)', color: '#F6AA3C',
+          fontFamily: 'var(--font-heading)', fontWeight: 700,
+          fontSize: '0.58rem', padding: '0.1rem 0.45rem',
+          transform: 'skewX(-15deg)', letterSpacing: '0.05em', textTransform: 'uppercase',
+        }}>
+          <span style={{ transform: 'skewX(15deg)' }}>{org.org_type}</span>
+        </span>
+      )}
+      {org.contact_name && (
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', margin: '0.25rem 0 0' }}>{org.contact_name}</p>
+      )}
+    </div>
+  )
+}
+
+function DraggablePipelineCard({ org }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: org.id, data: { org } })
+  return (
+    <div ref={setNodeRef} {...listeners} {...attributes} style={{ touchAction: 'none' }}>
+      <PipelineCard org={org} isDragging={isDragging} />
+    </div>
+  )
+}
+
+function DroppableColumn({ status, orgs, collapsed, onToggleCollapse }) {
+  const { setNodeRef, isOver } = useDroppable({ id: status })
+  const isEstablished = status === 'Partnership Established'
+  const isClosed      = COLLAPSED_BY_DEFAULT.has(status)
+
+  return (
+    <div style={{ minWidth: '220px', maxWidth: '220px', flexShrink: 0 }}>
+      <div
+        onClick={isClosed ? onToggleCollapse : undefined}
+        style={{
+          background: isEstablished ? 'linear-gradient(135deg, #14532d, #166534)' : isClosed ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.06)',
+          borderRadius: collapsed ? '10px' : '10px 10px 0 0',
+          padding: '0.6rem 0.85rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          cursor: isClosed ? 'pointer' : 'default',
+          border: `1px solid ${isEstablished ? 'rgba(134,239,172,0.2)' : 'rgba(255,255,255,0.08)'}`,
+          borderBottom: collapsed ? undefined : 'none',
+        }}
+      >
+        <span style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.75rem', color: isEstablished ? '#86efac' : 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {status}
+        </span>
+        <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.82rem', color: isEstablished ? '#86efac' : 'rgba(255,255,255,0.5)', flexShrink: 0, marginLeft: '0.4rem' }}>
+          {orgs.length}{isClosed && <span style={{ marginLeft: '0.35rem', opacity: 0.6 }}>{collapsed ? '▸' : '▾'}</span>}
+        </span>
+      </div>
+
+      {!collapsed && (
+        <div ref={setNodeRef} style={{
+          minHeight: '80px',
+          background: isOver ? 'rgba(246,170,60,0.05)' : 'rgba(255,255,255,0.02)',
+          border: `1px solid ${isOver ? 'rgba(246,170,60,0.3)' : 'rgba(255,255,255,0.07)'}`,
+          borderRadius: '0 0 10px 10px',
+          padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem',
+          transition: 'background 0.15s ease, border-color 0.15s ease',
+        }}>
+          {orgs.length === 0 ? (
+            <div style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '2px dashed rgba(255,255,255,0.1)', borderRadius: '8px', minHeight: '60px',
+              color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--font-body)', fontSize: '0.78rem',
+            }}>Drop here</div>
+          ) : orgs.map(org => (
+            <DraggablePipelineCard key={org.id} org={org} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Pipeline Tab ──────────────────────────────────────────────
 function PipelineTab({ chapterId }) {
   const [orgs,      setOrgs]      = useState([])
   const [loading,   setLoading]   = useState(true)
+  const [activeOrg, setActiveOrg] = useState(null)
   const [collapsed, setCollapsed] = useState(() => {
     const init = {}
     COLLAPSED_BY_DEFAULT.forEach(s => { init[s] = true })
     return init
   })
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   useEffect(() => {
     supabase
@@ -438,13 +536,29 @@ function PipelineTab({ chapterId }) {
     else byStatus['Not Contacted'].push(org)
   })
 
+  function handleDragStart(event) {
+    setActiveOrg(orgs.find(o => o.id === event.active.id) ?? null)
+  }
+
+  async function handleDragEnd(event) {
+    setActiveOrg(null)
+    const { active, over } = event
+    if (!over) return
+    const org = orgs.find(o => o.id === active.id)
+    if (!org || org.current_status === over.id) return
+    const newStatus = over.id
+    setOrgs(prev => prev.map(o => o.id === org.id ? { ...o, current_status: newStatus } : o))
+    const { error } = await supabase.from('organizations').update({ current_status: newStatus }).eq('id', org.id)
+    if (error) setOrgs(prev => prev.map(o => o.id === org.id ? { ...o, current_status: org.current_status } : o))
+  }
+
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}><div className="p4c-spinner" /></div>
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)' }}>
-          {orgs.length} organizations
+          {orgs.length} organizations · drag cards to update status
         </p>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           {Array.from(COLLAPSED_BY_DEFAULT).map(s => (
@@ -460,76 +574,22 @@ function PipelineTab({ chapterId }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '1.5rem', alignItems: 'flex-start' }}>
-        {ALL_PIPELINE_STATUSES.map(status => {
-          const isEstablished = status === 'Partnership Established'
-          const isClosed      = COLLAPSED_BY_DEFAULT.has(status)
-          const col           = byStatus[status] ?? []
-          const isCollapsed   = collapsed[status]
-
-          return (
-            <div key={status} style={{ minWidth: '220px', maxWidth: '220px', flexShrink: 0 }}>
-              <div
-                onClick={isClosed ? () => setCollapsed(prev => ({ ...prev, [status]: !prev[status] })) : undefined}
-                style={{
-                  background: isEstablished ? 'linear-gradient(135deg, #14532d, #166534)' : isClosed ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.06)',
-                  borderRadius: isCollapsed ? '10px' : '10px 10px 0 0',
-                  padding: '0.6rem 0.85rem',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  cursor: isClosed ? 'pointer' : 'default',
-                  border: `1px solid ${isEstablished ? 'rgba(134,239,172,0.2)' : 'rgba(255,255,255,0.08)'}`,
-                  borderBottom: isCollapsed ? undefined : 'none',
-                }}
-              >
-                <span style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.75rem', color: isEstablished ? '#86efac' : 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {status}
-                </span>
-                <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.82rem', color: isEstablished ? '#86efac' : 'rgba(255,255,255,0.5)', flexShrink: 0, marginLeft: '0.4rem' }}>
-                  {col.length}{isClosed && <span style={{ marginLeft: '0.35rem', opacity: 0.6 }}>{isCollapsed ? '▸' : '▾'}</span>}
-                </span>
-              </div>
-
-              {!isCollapsed && (
-                <div style={{
-                  minHeight: '80px', background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.07)', borderRadius: '0 0 10px 10px',
-                  padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem',
-                }}>
-                  {col.length === 0 ? (
-                    <div style={{
-                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      border: '2px dashed rgba(255,255,255,0.1)', borderRadius: '8px', minHeight: '60px',
-                      color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--font-body)', fontSize: '0.78rem',
-                    }}>Empty</div>
-                  ) : col.map(org => (
-                    <div key={org.id} style={{
-                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                      borderLeft: isEstablished ? '3px solid #86efac' : '3px solid transparent',
-                      borderRadius: '10px', padding: '0.65rem 0.85rem',
-                    }}>
-                      <p style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.85rem', color: 'white', margin: 0, lineHeight: 1.3 }}>{org.org_name}</p>
-                      {org.org_type && (
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', marginTop: '0.3rem',
-                          background: 'rgba(246,170,60,0.15)', color: '#F6AA3C',
-                          fontFamily: 'var(--font-heading)', fontWeight: 700,
-                          fontSize: '0.58rem', padding: '0.1rem 0.45rem',
-                          transform: 'skewX(-15deg)', letterSpacing: '0.05em', textTransform: 'uppercase',
-                        }}>
-                          <span style={{ transform: 'skewX(15deg)' }}>{org.org_type}</span>
-                        </span>
-                      )}
-                      {org.contact_name && (
-                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', margin: '0.25rem 0 0' }}>{org.contact_name}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '1.5rem', alignItems: 'flex-start' }}>
+          {ALL_PIPELINE_STATUSES.map(status => (
+            <DroppableColumn
+              key={status}
+              status={status}
+              orgs={byStatus[status] ?? []}
+              collapsed={!!collapsed[status]}
+              onToggleCollapse={() => setCollapsed(prev => ({ ...prev, [status]: !prev[status] }))}
+            />
+          ))}
+        </div>
+        <DragOverlay>
+          {activeOrg && <PipelineCard org={activeOrg} isDragging />}
+        </DragOverlay>
+      </DndContext>
     </div>
   )
 }
