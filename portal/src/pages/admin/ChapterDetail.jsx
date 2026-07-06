@@ -25,6 +25,28 @@ const PAGE_SIZE = 50
 const ORG_TYPE_OPTIONS = ['Library', 'School', 'Community Center', 'Church/Religious', 'Hospital', 'Non-Profit', 'Business', 'Government', 'Other']
 const CONTACT_METHODS  = ['Email', 'Phone', 'In Person', 'Social Media', 'Mail', 'Other']
 const GENRE_OPTIONS    = ['Fiction', 'Nonfiction', 'Picture Book', 'Early Reader', 'Middle Grade', 'Young Adult', 'Reference', 'Educational', 'Other']
+
+const PIPELINE_SORT_OPTIONS = [
+  { value: 'default',     label: 'Default Order'           },
+  { value: 'name_asc',    label: 'Name A → Z'              },
+  { value: 'name_desc',   label: 'Name Z → A'              },
+  { value: 'date_newest', label: 'Date Contacted (newest)' },
+  { value: 'date_oldest', label: 'Date Contacted (oldest)' },
+  { value: 'org_type',    label: 'Org Type'                },
+]
+
+function sortPipelineOrgs(orgs, key) {
+  if (!key || key === 'default') return orgs
+  const arr = [...orgs]
+  switch (key) {
+    case 'name_asc':    return arr.sort((a, b) => (a.org_name ?? '').localeCompare(b.org_name ?? ''))
+    case 'name_desc':   return arr.sort((a, b) => (b.org_name ?? '').localeCompare(a.org_name ?? ''))
+    case 'date_newest': return arr.sort((a, b) => new Date(b.date_first_contacted ?? 0) - new Date(a.date_first_contacted ?? 0))
+    case 'date_oldest': return arr.sort((a, b) => new Date(a.date_first_contacted ?? 0) - new Date(b.date_first_contacted ?? 0))
+    case 'org_type':    return arr.sort((a, b) => (a.org_type ?? '').localeCompare(b.org_type ?? ''))
+    default:            return orgs
+  }
+}
 const AGE_OPTIONS      = ['0-3', '4-6', '7-9', '10-12', '13+', 'All Ages']
 const CONDITION_OPTIONS = ['New', 'Good', 'Fair', 'Poor']
 
@@ -867,53 +889,122 @@ function DraggablePipelineCard({ org }) {
   )
 }
 
-function DroppableColumn({ status, orgs, collapsed, onToggleCollapse }) {
+function DroppableColumn({ status, orgs, collapsed, onToggleCollapse, search, sortKey }) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const isEstablished = status === 'Partnership Established'
-  const isClosed      = COLLAPSED_BY_DEFAULT.has(status)
+  const searchLower   = (search ?? '').toLowerCase()
+  const sortedOrgs    = sortPipelineOrgs(orgs, sortKey)
+  const matchCount    = search
+    ? sortedOrgs.filter(o => (o.org_name ?? '').toLowerCase().includes(searchLower)).length
+    : orgs.length
+
+  // ── Collapsed strip ────────────────────────────────────────
+  if (collapsed) {
+    return (
+      <div
+        ref={setNodeRef}
+        onClick={onToggleCollapse}
+        style={{
+          minWidth: '40px', maxWidth: '40px', flexShrink: 0,
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'flex-start',
+          paddingTop: '0.75rem', paddingBottom: '0.75rem',
+          background: isEstablished
+            ? 'linear-gradient(180deg, #14532d, #166534)'
+            : isOver ? 'rgba(246,170,60,0.05)' : 'rgba(255,255,255,0.03)',
+          border: `1px solid ${
+            isEstablished ? 'rgba(134,239,172,0.2)'
+            : isOver ? 'rgba(246,170,60,0.3)'
+            : 'rgba(255,255,255,0.08)'
+          }`,
+          borderRadius: '10px', cursor: 'pointer', gap: '0.65rem', minHeight: '100px',
+          transition: 'background 0.15s ease, border-color 0.15s ease',
+        }}
+      >
+        <span style={{
+          fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.65rem',
+          color: search ? '#F6AA3C' : isEstablished ? '#86efac' : 'rgba(255,255,255,0.6)',
+          background: search ? 'rgba(246,170,60,0.18)' : 'rgba(255,255,255,0.08)',
+          borderRadius: '20px', padding: '0.12rem 0.4rem', lineHeight: 1.3,
+        }}>
+          {search ? matchCount : orgs.length}
+        </span>
+        <span style={{
+          fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.62rem',
+          color: isEstablished ? '#86efac' : 'rgba(255,255,255,0.5)',
+          textTransform: 'uppercase', letterSpacing: '0.07em',
+          writingMode: 'vertical-rl', transform: 'rotate(180deg)', whiteSpace: 'nowrap',
+        }}>
+          {status}
+        </span>
+      </div>
+    )
+  }
+
+  // ── Expanded column ────────────────────────────────────────
+  const headerBg = isEstablished ? 'linear-gradient(135deg, #14532d, #166534)' : 'rgba(255,255,255,0.06)'
 
   return (
-    <div style={{ minWidth: '220px', maxWidth: '220px', flexShrink: 0 }}>
+    <div style={{ minWidth: '220px', maxWidth: '220px', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
       <div
-        onClick={isClosed ? onToggleCollapse : undefined}
+        onClick={onToggleCollapse}
         style={{
-          background: isEstablished ? 'linear-gradient(135deg, #14532d, #166534)' : isClosed ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.06)',
-          borderRadius: collapsed ? '10px' : '10px 10px 0 0',
+          background: headerBg, borderRadius: '10px 10px 0 0',
           padding: '0.6rem 0.85rem',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          cursor: isClosed ? 'pointer' : 'default',
+          cursor: 'pointer',
           border: `1px solid ${isEstablished ? 'rgba(134,239,172,0.2)' : 'rgba(255,255,255,0.08)'}`,
-          borderBottom: collapsed ? undefined : 'none',
+          borderBottom: 'none', userSelect: 'none',
         }}
       >
         <span style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.75rem', color: isEstablished ? '#86efac' : 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {status}
         </span>
-        <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.82rem', color: isEstablished ? '#86efac' : 'rgba(255,255,255,0.5)', flexShrink: 0, marginLeft: '0.4rem' }}>
-          {orgs.length}{isClosed && <span style={{ marginLeft: '0.35rem', opacity: 0.6 }}>{collapsed ? '▸' : '▾'}</span>}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0, marginLeft: '0.4rem' }}>
+          {search ? (
+            <span style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.72rem', color: '#F6AA3C' }}>
+              {matchCount}<span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}> / {orgs.length}</span>
+            </span>
+          ) : (
+            <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.82rem', color: isEstablished ? '#86efac' : 'rgba(255,255,255,0.5)' }}>
+              {orgs.length}
+            </span>
+          )}
+          <span style={{ opacity: 0.35, fontSize: '0.6rem', color: 'white' }}>▾</span>
+        </div>
       </div>
 
-      {!collapsed && (
-        <div ref={setNodeRef} style={{
-          minHeight: '80px',
-          background: isOver ? 'rgba(246,170,60,0.05)' : 'rgba(255,255,255,0.02)',
-          border: `1px solid ${isOver ? 'rgba(246,170,60,0.3)' : 'rgba(255,255,255,0.07)'}`,
-          borderRadius: '0 0 10px 10px',
-          padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem',
-          transition: 'background 0.15s ease, border-color 0.15s ease',
-        }}>
-          {orgs.length === 0 ? (
-            <div style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '2px dashed rgba(255,255,255,0.1)', borderRadius: '8px', minHeight: '60px',
-              color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--font-body)', fontSize: '0.78rem',
-            }}>Drop here</div>
-          ) : orgs.map(org => (
-            <DraggablePipelineCard key={org.id} org={org} />
-          ))}
-        </div>
-      )}
+      <div ref={setNodeRef} style={{
+        minHeight: '80px',
+        background: isOver ? 'rgba(246,170,60,0.05)' : 'rgba(255,255,255,0.02)',
+        border: `1px solid ${isOver ? 'rgba(246,170,60,0.3)' : 'rgba(255,255,255,0.07)'}`,
+        borderRadius: '0 0 10px 10px',
+        padding: '0.5rem', display: 'flex', flexDirection: 'column',
+        transition: 'background 0.15s ease, border-color 0.15s ease',
+      }}>
+        {sortedOrgs.map(org => {
+          const matches = !search || (org.org_name ?? '').toLowerCase().includes(searchLower)
+          return (
+            <div key={org.id} style={{
+              opacity: matches ? 1 : 0,
+              maxHeight: matches ? '200px' : 0,
+              marginBottom: matches ? '0.5rem' : 0,
+              overflow: 'hidden',
+              pointerEvents: matches ? 'auto' : 'none',
+              transition: 'opacity 200ms ease-out, max-height 200ms ease-out, margin-bottom 200ms ease-out',
+            }}>
+              <DraggablePipelineCard org={org} />
+            </div>
+          )
+        })}
+        {orgs.length === 0 && (
+          <div style={{
+            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '2px dashed rgba(255,255,255,0.1)', borderRadius: '8px', minHeight: '60px',
+            color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--font-body)', fontSize: '0.78rem',
+          }}>Drop here</div>
+        )}
+      </div>
     </div>
   )
 }
@@ -924,6 +1015,8 @@ function PipelineTab({ chapterId }) {
   const [loading,   setLoading]   = useState(true)
   const [activeOrg, setActiveOrg] = useState(null)
   const [lastMove,  setLastMove]  = useState(null)
+  const [search,    setSearch]    = useState('')
+  const [sortKey,   setSortKey]   = useState('default')
   const [collapsed, setCollapsed] = useState(() => {
     const init = {}
     COLLAPSED_BY_DEFAULT.forEach(s => { init[s] = true })
@@ -935,7 +1028,7 @@ function PipelineTab({ chapterId }) {
   useEffect(() => {
     supabase
       .from('organizations')
-      .select('id, org_name, org_type, contact_name, current_status, updated_at')
+      .select('id, org_name, org_type, contact_name, current_status, updated_at, date_first_contacted')
       .eq('chapter_id', chapterId)
       .order('updated_at', { ascending: false })
       .then(({ data }) => { setOrgs(data ?? []); setLoading(false) })
@@ -988,22 +1081,59 @@ function PipelineTab({ chapterId }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)' }}>
-          {orgs.length} organizations · drag cards to update status{lastMove ? ' · Ctrl+Z to undo' : ''}
-        </p>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {Array.from(COLLAPSED_BY_DEFAULT).map(s => (
-            <button key={s} onClick={() => setCollapsed(prev => ({ ...prev, [s]: !prev[s] }))} style={{
-              padding: '0.35rem 0.75rem', background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px',
-              color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-body)',
-              fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer',
-            }}>
-              {collapsed[s] ? '▸' : '▾'} {s}
+      {/* Controls row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        {/* Search */}
+        <div style={{ position: 'relative', flex: '1 1 180px', maxWidth: '280px' }}>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search organizations…"
+            style={{
+              width: '100%', padding: '0.5rem 2.2rem 0.5rem 0.9rem',
+              background: '#0d233e',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: '8px',
+              color: 'white', fontFamily: 'var(--font-body)', fontSize: '0.85rem',
+              outline: 'none', boxSizing: 'border-box',
+              transition: 'border-color 0.15s ease',
+            }}
+            onFocus={e => { e.currentTarget.style.borderColor = 'rgba(246,170,60,0.6)' }}
+            onBlur={e  => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)' }}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              style={{
+                position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)',
+                background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.45)',
+                cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1, padding: '0.1rem',
+              }}
+            >
+              ×
             </button>
-          ))}
+          )}
         </div>
+
+        {/* Sort */}
+        <select
+          value={sortKey}
+          onChange={e => setSortKey(e.target.value)}
+          style={{
+            padding: '0.5rem 0.9rem',
+            background: sortKey !== 'default' ? 'rgba(246,170,60,0.1)' : 'rgba(255,255,255,0.06)',
+            border: `1px solid ${sortKey !== 'default' ? 'rgba(246,170,60,0.3)' : 'rgba(255,255,255,0.12)'}`,
+            borderRadius: '8px',
+            color: sortKey !== 'default' ? '#F6AA3C' : 'rgba(255,255,255,0.7)',
+            fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer',
+          }}
+        >
+          {PIPELINE_SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'rgba(255,255,255,0.35)', marginLeft: 'auto' }}>
+          {orgs.length} orgs{lastMove ? ' · Ctrl+Z to undo' : ''} · click header to collapse
+        </p>
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCorners} modifiers={[restrictToWindowEdges]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -1015,6 +1145,8 @@ function PipelineTab({ chapterId }) {
               orgs={byStatus[status] ?? []}
               collapsed={!!collapsed[status]}
               onToggleCollapse={() => setCollapsed(prev => ({ ...prev, [status]: !prev[status] }))}
+              search={search}
+              sortKey={sortKey}
             />
           ))}
         </div>
