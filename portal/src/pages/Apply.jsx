@@ -15,14 +15,29 @@ const US_STATES = [
   'VA','WA','WV','WI','WY','DC',
 ]
 
+const HOURS_OPTIONS = ['1-2 hours', '3-5 hours', '5+ hours']
+
+const TEAM_OPTIONS = [
+  'Yes, I have 1-2 people ready',
+  'Yes, I have 3+ people ready',
+  'Not yet, but I\'m working on it',
+  'I plan to recruit after applying',
+]
+
 const EMPTY = {
-  applicant_name:  '',
-  applicant_email: '',
-  school_name:     '',
-  city:            '',
-  state:           '',
-  grade:           '',
-  why_interested:  '',
+  applicant_name:       '',
+  applicant_email:      '',
+  school_name:          '',
+  city:                 '',
+  state:                '',
+  grade:                '',
+  why_interested:       '',
+  why_literacy:         '',
+  chapter_plan:         '',
+  hours_per_week:       '',
+  has_teammates:        '',
+  community_connections: '',
+  leadership_roles:     '',
 }
 
 function validate(form) {
@@ -45,6 +60,16 @@ function validate(form) {
     errs.why_interested = 'Please tell us why you want to start a chapter.'
   else if (form.why_interested.trim().length < 100)
     errs.why_interested = `At least 100 characters required (${form.why_interested.trim().length}/100).`
+  if (!form.why_literacy.trim())
+    errs.why_literacy = 'Please tell us about your passion for literacy.'
+  if (!form.chapter_plan.trim())
+    errs.chapter_plan = 'Please describe your chapter plan.'
+  if (!form.hours_per_week)
+    errs.hours_per_week = 'Please select your weekly availability.'
+  if (!form.has_teammates)
+    errs.has_teammates = 'Please select a team status.'
+  if (!form.community_connections.trim())
+    errs.community_connections = 'Please list organizations in your area.'
   return errs
 }
 
@@ -333,6 +358,120 @@ export default function Apply() {
                   style={{ minHeight: '140px' }}
                 />
                 <FieldError msg={fieldErrors.why_interested} />
+              </div>
+
+              {/* ── Section divider ── */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                margin: '0.4rem 0',
+              }}>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                <span style={{
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: '0.68rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.18em',
+                  color: '#F6AA3C',
+                  textTransform: 'uppercase',
+                  whiteSpace: 'nowrap',
+                }}>
+                  ABOUT YOUR CHAPTER
+                </span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+              </div>
+
+              {/* Why literacy */}
+              <div>
+                <label className="p4c-label">Why are you passionate about literacy and book access?</label>
+                <textarea
+                  className={`p4c-input${fieldErrors.why_literacy ? ' input-error' : ''}`}
+                  placeholder="Tell us what drives your interest in this cause (2-3 sentences)"
+                  value={form.why_literacy}
+                  onChange={set('why_literacy')}
+                  style={{ minHeight: '110px' }}
+                />
+                <FieldError msg={fieldErrors.why_literacy} />
+              </div>
+
+              {/* Chapter plan */}
+              <div>
+                <label className="p4c-label">How do you plan to run your chapter?</label>
+                <textarea
+                  className={`p4c-input${fieldErrors.chapter_plan ? ' input-error' : ''}`}
+                  placeholder="How will you source books, find partner organizations, and run outreach in your community?"
+                  value={form.chapter_plan}
+                  onChange={set('chapter_plan')}
+                  style={{ minHeight: '120px' }}
+                />
+                <FieldError msg={fieldErrors.chapter_plan} />
+              </div>
+
+              {/* Hours + Team row */}
+              <div className="apply-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label className="p4c-label">How many hours per week can you dedicate?</label>
+                  <select
+                    className={`p4c-input${fieldErrors.hours_per_week ? ' input-error' : ''}`}
+                    value={form.hours_per_week}
+                    onChange={set('hours_per_week')}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <option value="">Select…</option>
+                    {HOURS_OPTIONS.map(h => <option key={h} value={h}>{h}</option>)}
+                  </select>
+                  <FieldError msg={fieldErrors.hours_per_week} />
+                </div>
+                <div>
+                  <label className="p4c-label">Do you already have teammates who would join you?</label>
+                  <select
+                    className={`p4c-input${fieldErrors.has_teammates ? ' input-error' : ''}`}
+                    value={form.has_teammates}
+                    onChange={set('has_teammates')}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <option value="">Select…</option>
+                    {TEAM_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                  <FieldError msg={fieldErrors.has_teammates} />
+                </div>
+              </div>
+
+              {/* Community connections */}
+              <div>
+                <label className="p4c-label">What libraries, schools, or community organizations are in your area?</label>
+                <textarea
+                  className={`p4c-input${fieldErrors.community_connections ? ' input-error' : ''}`}
+                  placeholder="List any local organizations you could potentially partner with"
+                  value={form.community_connections}
+                  onChange={set('community_connections')}
+                  style={{ minHeight: '100px' }}
+                />
+                <FieldError msg={fieldErrors.community_connections} />
+              </div>
+
+              {/* Leadership roles (optional) */}
+              <div>
+                <label className="p4c-label">
+                  Current school clubs or leadership roles
+                  <span style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.72rem',
+                    fontWeight: 500,
+                    color: 'rgba(255,255,255,0.35)',
+                    marginLeft: '0.5rem',
+                  }}>
+                    optional
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  className="p4c-input"
+                  placeholder="e.g. Student Government, NHS, Key Club (leave blank if none)"
+                  value={form.leadership_roles}
+                  onChange={set('leadership_roles')}
+                />
               </div>
 
               <button
