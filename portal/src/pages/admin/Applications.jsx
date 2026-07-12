@@ -8,6 +8,28 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+// ── Detail field helper ────────────────────────────────────────
+function DetailField({ label, value }) {
+  if (!value) return null
+  return (
+    <div>
+      <p style={{
+        fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.68rem',
+        color: '#F6AA3C', textTransform: 'uppercase', letterSpacing: '0.08em',
+        marginBottom: '0.3rem', margin: '0 0 0.3rem',
+      }}>
+        {label}
+      </p>
+      <p style={{
+        fontFamily: 'var(--font-body)', fontSize: '0.9rem',
+        color: 'rgba(255,255,255,0.82)', lineHeight: 1.7, margin: 0,
+      }}>
+        {value}
+      </p>
+    </div>
+  )
+}
+
 // ── Application Card ───────────────────────────────────────────
 function AppCard({ app, onApprove, onReject }) {
   const [expanded,  setExpanded]  = useState(false)
@@ -66,15 +88,40 @@ function AppCard({ app, onApprove, onReject }) {
 
         {/* Expanded details */}
         <div className={`p4c-expand ${expanded ? 'p4c-expand-open' : 'p4c-expand-closed'}`}>
-          <div style={{ padding: '0 1.25rem 1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ paddingTop: '1rem', marginBottom: '1rem' }}>
-              <p style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>
-                Why they're interested
-              </p>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.7 }}>
-                {app.why_interested}
-              </p>
+          <div style={{ padding: '0 1.5rem 1.5rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+
+            {/* Full-width text fields */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', paddingTop: '1.25rem' }}>
+              <DetailField label="Why they're interested" value={app.why_interested} />
+              <DetailField label="Why passionate about literacy" value={app.why_literacy} />
+              <DetailField label="Chapter plan" value={app.chapter_plan} />
             </div>
+
+            {/* 2-column short fields */}
+            {(app.hours_per_week || app.has_teammates || app.leadership_roles) && (
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem',
+                marginTop: '1.1rem',
+              }}>
+                <DetailField label="Hours per week" value={app.hours_per_week} />
+                <DetailField label="Team status" value={app.has_teammates} />
+                {app.leadership_roles && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <DetailField label="Leadership roles" value={app.leadership_roles} />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Community connections */}
+            {app.community_connections && (
+              <div style={{ marginTop: '1.1rem' }}>
+                <DetailField label="Community connections" value={app.community_connections} />
+              </div>
+            )}
+
+            {/* Divider */}
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '1.25rem 0 1rem' }} />
 
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)' }}>
