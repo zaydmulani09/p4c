@@ -1,5 +1,5 @@
-const GROQ_API = 'https://api.groq.com/openai/v1/chat/completions'
-const MODEL    = 'qwen/qwen3.6-27b'
+import { supabase } from './supabase.js'
+
 const FALLBACK = 'Summary unavailable — check back later'
 
 function getCached(key) {
@@ -17,58 +17,6 @@ function setCached(key, text) {
   try { localStorage.setItem(key, JSON.stringify({ text, ts: Date.now() })) } catch {}
 }
 
-async function callGroq(messages, maxTokens = 400) {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY
-  if (!apiKey) return FALLBACK
-  const res = await fetch(GROQ_API, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: MODEL, messages, max_tokens: maxTokens }),
-  })
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}))
-    console.error('[Groq] error response:', res.status, MODEL, errData)
-    return FALLBACK
-  }
-  const data = await res.json()
-  let text = data.choices?.[0]?.message?.content ?? FALLBACK
-  text = text.replace(/<think>[\s\S]*?<\/think>/g, '')
-  text = text.replace(/<think>[\s\S]*/g, '').trim()
-  return text
-}
-
-export async function generateWeeklySummary(stats, scope) {
-  const weekNum = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000))
-  const key = `p4c_groq_weekly_${scope}_w${weekNum}`
-  const cached = getCached(key)
-  if (cached) return cached
-
-  const isZeroData = scope === 'national'
-    ? !stats.totalDistributions && !stats.totalOrgsContacted
-    : !stats.orgs && !stats.books && !stats.distributions
-
-  const content = isZeroData
-    ? `Pages for Change is a new student-led literacy nonprofit just getting started. Write a brief, encouraging message (under 4 sentences, no bullet points) for the ${scope === 'national' ? 'national leadership team' : 'chapter lead'} about the exciting opportunity ahead to build a book distribution network and make a lasting impact in their community.`
-    : scope === 'national'
-      ? `Network stats: ${stats.totalChapters} active chapters, ${stats.totalDistributions} distribution events totaling ${stats.totalBooksDistributed} books distributed, ${stats.totalOrgsContacted} organizations contacted, ${stats.totalPartnerships} established partnerships.`
-      : `This week: ${stats.orgs} new organizations logged, ${stats.books} books received, ${stats.distributions} distribution event${stats.distributions !== 1 ? 's' : ''} made (${stats.booksDistributed} books distributed), ${stats.activeConversations} active conversations ongoing.`
-
-  try {
-    const systemPrompt = scope === 'national'
-      ? 'You are the communications director for Pages for Change, a student-led national literacy nonprofit. Write a concise, professional weekly network summary for the national leadership team. Tone: warm, mission-driven, and encouraging. Format: 3-4 sentences of flowing prose, no bullet points, no headers. Be specific with the numbers provided. Sound like a real nonprofit update, not a generic AI summary.'
-      : 'You are the communications director for Pages for Change, a student-led national literacy nonprofit. Write a concise, professional weekly summary for a chapter lead. Tone: warm, mission-driven, and encouraging. Format: 3-4 sentences of flowing prose, no bullet points, no headers. Be specific with the numbers provided. Sound like a real nonprofit update, not a generic AI summary.'
-    const text = await callGroq([
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content },
-    ], 1024)
-    setCached(key, text)
-    return text
-  } catch (e) {
-    console.error('[Groq] generateWeeklySummary:', e)
-    return FALLBACK
-  }
-}
-
 export async function generateImpactReport(data, period, scope) {
   const periodKey = period.replace(/[^a-zA-Z0-9]/g, '_')
   const chapterKey = data.chapterId ?? 'network'
@@ -76,33 +24,17 @@ export async function generateImpactReport(data, period, scope) {
   const cached = getCached(key)
   if (cached) return cached
 
-  const isNational = scope === 'national'
-
-  const systemMsg = `You are writing a formal impact report body for Pages for Change, a student-led literacy nonprofit. Do NOT include the report header — it is added separately. Write exactly 4 sections using ALL CAPS headers followed by a blank line, then a paragraph. Use this format:
-
-OUTREACH SUMMARY
-[2–3 sentence paragraph with specific numbers]
-
-PARTNERSHIP HIGHLIGHTS
-[2–3 sentence paragraph]
-
-BOOK DISTRIBUTION
-[2–3 sentence paragraph]
-
-LOOKING AHEAD
-[1 forward-looking sentence]
-
-Be specific with every number provided. Professional, grant-ready tone.`
-
-  const userMsg = isNational
-    ? `Period: ${period}. Network data: ${data.totalChapters} active chapters, ${data.totalOrgs} organizations contacted network-wide, status breakdown: ${data.statusBreakdown}, ${data.totalBooksDistributed} total books distributed across ${data.totalDistributions} distributions, ${data.totalPartnerships} partnerships established, top performing chapter: ${data.topChapter} (${data.topChapterBooks} books distributed), geographic spread: ${data.states}.`
-    : `Period: ${period}. Chapter: ${data.chapterName}. Data: ${data.totalOrgs} organizations contacted, status breakdown: ${data.statusBreakdown}, ${data.booksReceived} books received, ${data.booksDistributed} books distributed across ${data.totalDistributions} distributions to organizations including: ${data.distributionOrgs}, ${data.partnerships} partnerships established, top volunteer: ${data.topVolunteer}.`
-
   try {
-    const text = await callGroq([
-      { role: 'system', content: systemMsg },
-      { role: 'user', content: userMsg },
-    ], 600)
+    const { data: resData, error } = await supabase.functions.invoke('groq-summary', {
+      body: { type: 'impact_report', data, period, scope }
+    })
+    
+    if (error || !resData?.summary) {
+      console.error('[Groq] generateImpactReport:', error)
+      return FALLBACK
+    }
+    
+    const text = resData.summary
     setCached(key, text)
     return text
   } catch (e) {
@@ -116,23 +48,17 @@ export async function generateImpactCertificate(data) {
   const cached = getCached(key)
   if (cached) return cached
 
-  const systemMsg = `You are generating a formal leadership certificate body for Pages for Change. Return ONLY the body text — the heading "CHAPTER LEADERSHIP CERTIFICATE" is added separately. Start with "This certifies that [NAME] served as Chapter Lead..." then a brief sentence, then a bullet list of 4 accomplishments using the exact numbers provided. Finish with a blank line before the signature area. Use this structure:
-
-This certifies that [FULL NAME] served as Chapter Lead of the [CHAPTER] Chapter of Pages for Change during [YEAR].
-
-Under their leadership, the chapter:
-• Contacted [N] organizations
-• Established [N] partnerships
-• Distributed [N] books to [N] partner organizations
-• Contributed to a network of [N] chapters across [N] states`
-
-  const userMsg = `Lead: ${data.leadName}. Chapter: ${data.chapterName}. Year: ${data.year}. Stats: orgsContacted=${data.orgsContacted}, partnerships=${data.partnerships}, booksDistributed=${data.booksDistributed}, partnerOrgs=${data.partnerOrgs}, networkChapters=${data.networkChapters}, networkStates=${data.networkStates}.`
-
   try {
-    const text = await callGroq([
-      { role: 'system', content: systemMsg },
-      { role: 'user', content: userMsg },
-    ], 400)
+    const { data: resData, error } = await supabase.functions.invoke('groq-summary', {
+      body: { type: 'certificate', data }
+    })
+    
+    if (error || !resData?.summary) {
+      console.error('[Groq] generateImpactCertificate:', error)
+      return FALLBACK
+    }
+    
+    const text = resData.summary
     setCached(key, text)
     return text
   } catch (e) {

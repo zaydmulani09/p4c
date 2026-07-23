@@ -23,9 +23,12 @@ oversee the full network from a unified dashboard.
    ```
    VITE_SUPABASE_URL=https://xxxx.supabase.co
    VITE_SUPABASE_ANON_KEY=...
-   VITE_GROQ_API_KEY=...
    ```
-4. `cd portal && npm install && npm run dev`
+4. Set the Groq API key in your Supabase project securely:
+   ```bash
+   supabase secrets set GROQ_API_KEY=your_key_here
+   ```
+5. `cd portal && npm install && npm run dev`
 
 ## Data migration
 

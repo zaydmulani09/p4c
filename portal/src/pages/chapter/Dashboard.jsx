@@ -582,9 +582,7 @@ export default function Dashboard() {
               </p>
             ) : (
               <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)' }}>
-                {import.meta.env.VITE_GROQ_API_KEY
-                  ? 'No activity data yet this week.'
-                  : 'AI summaries require VITE_GROQ_API_KEY to be configured.'}
+                No activity data yet this week, or summary unavailable.
               </p>
             )}
           </div>

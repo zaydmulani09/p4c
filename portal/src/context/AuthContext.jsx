@@ -10,13 +10,20 @@ export function AuthProvider({ children }) {
   const [loading,   setLoading]   = useState(true)
 
   async function fetchProfile() {
-    const { data } = await supabase.rpc('get_my_profile')
-    const profile = Array.isArray(data) ? data[0] : data
-    if (profile) {
-      setRole(profile.role)
-      setChapterId(profile.chapter_id ?? null)
-    } else {
-      setRole(null)
+    try {
+      const { data, error } = await supabase.rpc('get_my_profile')
+      if (error) throw error
+      const profile = Array.isArray(data) ? data[0] : data
+      if (profile) {
+        setRole(profile.role)
+        setChapterId(profile.chapter_id ?? null)
+      } else {
+        setRole(null)
+        setChapterId(null)
+      }
+    } catch (err) {
+      console.error('Failed to fetch profile:', err)
+      setRole('error') // Use 'error' to break out of spinner loops
       setChapterId(null)
     }
   }

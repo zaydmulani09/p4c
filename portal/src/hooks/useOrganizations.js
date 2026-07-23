@@ -4,8 +4,9 @@ import { useAuth } from '../context/AuthContext.jsx'
 
 export const PAGE_SIZE = 50
 
-export function useOrganizations(filters = {}, page = 0) {
-  const { chapterId, user } = useAuth()
+export function useOrganizations(filters = {}, page = 0, overrideChapterId = null) {
+  const { chapterId: authChapterId, user } = useAuth()
+  const chapterId = overrideChapterId || authChapterId
   const [orgs,      setOrgs]      = useState([])
   const [count,     setCount]     = useState(0)
   const [memberMap, setMemberMap] = useState({})
@@ -28,11 +29,14 @@ export function useOrganizations(filters = {}, page = 0) {
       sortDir  = 'asc',
     } = filters
 
+    let actualSortCol = sortCol
+    if (sortCol === 'current_status') actualSortCol = 'status_weight'
+
     let q = supabase
       .from('organizations')
       .select('*', { count: 'exact' })
       .eq('chapter_id', chapterId)
-      .order(sortCol, { ascending: sortDir === 'asc', nullsFirst: false })
+      .order(actualSortCol, { ascending: sortDir === 'asc', nullsFirst: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
 
     if (search) {
