@@ -4,8 +4,9 @@ import { useAuth } from '../context/AuthContext.jsx'
 
 export const BOOKS_PAGE_SIZE = 50
 
-export function useBooks(filters = {}, page = 0) {
-  const { chapterId, user } = useAuth()
+export function useBooks(filters = {}, page = 0, overrideChapterId = null) {
+  const { chapterId: authChapterId, user } = useAuth()
+  const chapterId = overrideChapterId || authChapterId
   const [books,      setBooks]      = useState([])
   const [count,      setCount]      = useState(0)
   const [memberMap,  setMemberMap]  = useState({})
@@ -28,11 +29,15 @@ export function useBooks(filters = {}, page = 0) {
       sortDir   = 'asc',
     } = filters
 
+    let actualSortCol = sortCol
+    if (sortCol === 'condition') actualSortCol = 'condition_weight'
+    if (sortCol === 'age_range') actualSortCol = 'age_weight'
+
     let q = supabase
       .from('books')
       .select('*', { count: 'exact' })
       .eq('chapter_id', chapterId)
-      .order(sortCol, { ascending: sortDir === 'asc' })
+      .order(actualSortCol, { ascending: sortDir === 'asc', nullsFirst: false })
       .range(page * BOOKS_PAGE_SIZE, (page + 1) * BOOKS_PAGE_SIZE - 1)
 
     if (search)    q = q.or(`title.ilike.%${search}%,author.ilike.%${search}%`)

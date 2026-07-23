@@ -180,6 +180,10 @@ CREATE POLICY "chapters_admin_all" ON chapters FOR ALL TO authenticated
 CREATE POLICY "users_select_own" ON users FOR SELECT TO authenticated
   USING (auth.uid() = id);
 
+-- Allow chapter members to see other members in their chapter
+CREATE POLICY "users_chapter_select" ON users FOR SELECT TO authenticated
+  USING (chapter_id = get_user_chapter_id());
+
 CREATE POLICY "users_update_own" ON users FOR UPDATE TO authenticated
   USING (id = auth.uid())
   WITH CHECK (id = auth.uid());

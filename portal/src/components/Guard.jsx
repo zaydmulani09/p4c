@@ -21,6 +21,15 @@ export default function Guard({ allowedRoles, children }) {
   // Still fetching profile (user set but role not yet)
   if (allowedRoles && !role) return <FullScreenSpinner />
 
+  if (role === 'error') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#1a365d', color: 'white', fontFamily: 'var(--font-body)' }}>
+        <p style={{ marginBottom: '1rem' }}>Failed to load user profile.</p>
+        <button onClick={() => window.location.reload()} className="pill-button orange">Retry</button>
+      </div>
+    )
+  }
+
   return children
 }
 

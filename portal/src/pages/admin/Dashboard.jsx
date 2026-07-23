@@ -153,7 +153,7 @@ export default function AdminDashboard() {
           </p>
         ) : (
           <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)' }}>
-            Set VITE_GROQ_API_KEY to enable AI summaries.
+            No activity data yet this week, or summary unavailable.
           </p>
         )}
       </div>
